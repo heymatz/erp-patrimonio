@@ -1,0 +1,16 @@
+# Maven
+target/
+
+# IDE
+.vscode/
+.classpath
+.project
+.settings/
+
+# Compiled classes
+*.class
+
+# Build artifacts
+bin/
+logs/
+*.log

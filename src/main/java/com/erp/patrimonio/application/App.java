@@ -1,4 +1,4 @@
-package com.erp.patrimonio;
+package com.erp.patrimonio.application;
 
 public class App {
     public static void main(String[] args) {

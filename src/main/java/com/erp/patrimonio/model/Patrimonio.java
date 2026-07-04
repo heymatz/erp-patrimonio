@@ -121,9 +121,9 @@ public class Patrimonio {
     }
 
     public void setValor(double valor) {
-        if (valor < 0) {
+        if (valor <= 0) {
             throw new IllegalArgumentException(
-                    "O valor não pode ser negativo."
+                    "O valor deve ser maior que zero."
             );
         }
         this.valor = valor;

@@ -1,6 +1,6 @@
 package com.erp.patrimonio.model;
 
-public class Categoria {
+public class Local {
 
     private static final int MAX_NOME = 100;
     private static final int MAX_DESCRICAO = 255;
@@ -9,7 +9,7 @@ public class Categoria {
     private String nome;
     private String descricao;
 
-    public Categoria(int id, String nome, String descricao) {
+    public Local(int id, String nome, String descricao) {
         this.id = id;
         setNome(nome);
         setDescricao(descricao);
@@ -55,7 +55,7 @@ public class Categoria {
 
     @Override
     public String toString() {
-        return "Categoria{"
+        return "Local{"
                 + "id=" + id
                 + ", nome='" + nome + '\''
                 + ", descricao='" + descricao + '\''

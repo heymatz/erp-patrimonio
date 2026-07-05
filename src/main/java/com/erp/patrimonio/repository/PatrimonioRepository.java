@@ -7,6 +7,7 @@ import com.erp.patrimonio.model.Patrimonio;
 
 public class PatrimonioRepository {
 
+    private int proximoId = 1;
     private final List<Patrimonio> patrimonios;
 
     public PatrimonioRepository() {
@@ -14,9 +15,6 @@ public class PatrimonioRepository {
     }
 
     public void salvar(Patrimonio patrimonio) {
-        if (patrimonio == null) {
-            throw new IllegalArgumentException("O patrimônio não pode ser nulo.");
-        }
         patrimonios.add(patrimonio);
     }
 
@@ -34,38 +32,29 @@ public class PatrimonioRepository {
     }
 
     public void remover(int id) {
-        if (buscarPorId(id) == null) {
-            throw new IllegalArgumentException("O patrimônio com o ID " + id + " não existe.");
-        }
         patrimonios.removeIf(patrimonio -> patrimonio.getId() == id);
     }
 
-    public void atualizar(Patrimonio patrimonio) {
-        if (patrimonio == null) {
-            throw new IllegalArgumentException(
-                    "O patrimônio não pode ser nulo."
-            );
-        }
+    public boolean atualizar(Patrimonio patrimonio) {
         for (int i = 0; i < patrimonios.size(); i++) {
             if (patrimonios.get(i).getId() == patrimonio.getId()) {
                 patrimonios.set(i, patrimonio);
-                return;
+                return true;
             }
         }
-        throw new IllegalArgumentException(
-                "Patrimônio não encontrado."
-        );
+        return false;
     }
 
     public Patrimonio buscarPorNumeroSerie(String numeroSerie) {
-        if (numeroSerie == null || numeroSerie.isBlank()) {
-            throw new IllegalArgumentException("O número de série é obrigatório.");
-        }
         for (Patrimonio patrimonio : patrimonios) {
             if (patrimonio.getNumeroSerie().equals(numeroSerie)) {
                 return patrimonio;
             }
         }
         return null;
+    }
+
+    public int gerarProximoId() {
+        return proximoId++;
     }
 }

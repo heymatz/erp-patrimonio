@@ -2,10 +2,19 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.model.Categoria;
+import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.repository.PatrimonioRepository;
 
 public class PatrimonioService {
+
+    private static final String ERRO_NUMERO_SERIE_DUPLICADO
+            = "Número de série já cadastrado.";
+    private static final String ERRO_PATRIMONIO_NAO_ENCONTRADO
+            = "Patrimônio não encontrado.";
+    private static final String ERRO_FALHA_ATUALIZACAO
+            = "Falha ao atualizar patrimônio.";
 
     private final PatrimonioRepository repository;
 
@@ -13,44 +22,36 @@ public class PatrimonioService {
         this.repository = repository;
     }
 
-    public void cadastrar(Patrimonio patrimonio) {
-        if (patrimonio == null) {
-            throw new IllegalArgumentException("O patrimônio não pode ser nulo.");
-        }
+    public Patrimonio cadastrar(
+            String nome,
+            String descricao,
+            Categoria categoria,
+            Local local,
+            String numeroSerie,
+            double valor) {
 
-        Patrimonio existente = repository.buscarPorNumeroSerie(patrimonio.getNumeroSerie());
+        Patrimonio existente = repository.buscarPorNumeroSerie(numeroSerie);
 
         if (existente != null) {
-            throw new IllegalArgumentException(
-                    "Número de série já cadastrado."
-            );
+            throw new IllegalArgumentException(ERRO_NUMERO_SERIE_DUPLICADO);
         }
+
+        int id = repository.gerarProximoId();
+        Patrimonio patrimonio = new Patrimonio(
+                id,
+                nome,
+                descricao,
+                categoria,
+                local,
+                numeroSerie,
+                valor
+        );
         repository.salvar(patrimonio);
-
-    }
-
-    public void atualizar(Patrimonio patrimonio) {
-        if (patrimonio == null) {
-            throw new IllegalArgumentException("O patrimônio não pode ser nulo.");
-        }
-
-        Patrimonio existente = repository.buscarPorNumeroSerie(patrimonio.getNumeroSerie());
-
-        if (existente != null && existente.getId() != patrimonio.getId()) {
-            throw new IllegalArgumentException(
-                    "Número de série já cadastrado."
-            );
-        }
-        repository.atualizar(patrimonio);
+        return patrimonio;
     }
 
     public void remover(int id) {
-        Patrimonio existente = repository.buscarPorId(id);
-        if (existente == null) {
-            throw new IllegalArgumentException(
-                    "Patrimônio não encontrado."
-            );
-        }
+        buscarPorId(id);
         repository.remover(id);
     }
 
@@ -59,13 +60,43 @@ public class PatrimonioService {
     }
 
     public Patrimonio buscarPorId(int id) {
-        Patrimonio existente = repository.buscarPorId(id);
-        if (existente == null) {
-            throw new IllegalArgumentException(
-                    "Patrimônio não encontrado."
-            );
+        Patrimonio patrimonio = repository.buscarPorId(id);
+        if (patrimonio == null) {
+            throw new IllegalArgumentException(ERRO_PATRIMONIO_NAO_ENCONTRADO);
         }
-        return existente;
+        return patrimonio;
     }
 
+    public Patrimonio atualizar(
+            int id,
+            String nome,
+            String descricao,
+            Categoria categoria,
+            Local local,
+            String numeroSerie,
+            double valor) {
+
+        buscarPorId(id);
+
+        Patrimonio existente = repository.buscarPorNumeroSerie(numeroSerie);
+        if (existente != null && existente.getId() != id) {
+            throw new IllegalArgumentException(ERRO_NUMERO_SERIE_DUPLICADO);
+        }
+
+        Patrimonio atualizado = new Patrimonio(
+                id,
+                nome,
+                descricao,
+                categoria,
+                local,
+                numeroSerie,
+                valor
+        );
+
+        boolean atualizadoComSucesso = repository.atualizar(atualizado);
+        if (!atualizadoComSucesso) {
+            throw new IllegalStateException(ERRO_FALHA_ATUALIZACAO);
+        }
+        return atualizado;
+    }
 }

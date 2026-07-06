@@ -11,8 +11,10 @@ public class PatrimonioService {
 
     private static final String ERRO_NUMERO_SERIE_DUPLICADO
             = "Número de série já cadastrado.";
+
     private static final String ERRO_PATRIMONIO_NAO_ENCONTRADO
             = "Patrimônio não encontrado.";
+            
     private static final String ERRO_FALHA_ATUALIZACAO
             = "Falha ao atualizar patrimônio.";
 

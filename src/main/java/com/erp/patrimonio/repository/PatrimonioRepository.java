@@ -18,8 +18,18 @@ public class PatrimonioRepository {
         patrimonios.add(patrimonio);
     }
 
-    public List<Patrimonio> listarTodos() {
-        return new ArrayList<>(patrimonios);
+    public boolean atualizar(Patrimonio patrimonio) {
+        for (int i = 0; i < patrimonios.size(); i++) {
+            if (patrimonios.get(i).getId() == patrimonio.getId()) {
+                patrimonios.set(i, patrimonio);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean remover(int id) {
+        return patrimonios.removeIf(patrimonio -> patrimonio.getId() == id);
     }
 
     public Patrimonio buscarPorId(int id) {
@@ -31,20 +41,6 @@ public class PatrimonioRepository {
         return null;
     }
 
-    public void remover(int id) {
-        patrimonios.removeIf(patrimonio -> patrimonio.getId() == id);
-    }
-
-    public boolean atualizar(Patrimonio patrimonio) {
-        for (int i = 0; i < patrimonios.size(); i++) {
-            if (patrimonios.get(i).getId() == patrimonio.getId()) {
-                patrimonios.set(i, patrimonio);
-                return true;
-            }
-        }
-        return false;
-    }
-
     public Patrimonio buscarPorNumeroSerie(String numeroSerie) {
         for (Patrimonio patrimonio : patrimonios) {
             if (patrimonio.getNumeroSerie().equals(numeroSerie)) {
@@ -52,6 +48,10 @@ public class PatrimonioRepository {
             }
         }
         return null;
+    }
+
+    public List<Patrimonio> listarTodos() {
+        return new ArrayList<>(patrimonios);
     }
 
     public int gerarProximoId() {

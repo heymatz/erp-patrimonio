@@ -15,6 +15,9 @@ public class CategoriaRepository {
     }
 
     public void salvar(Categoria categoria) {
+        if (categoria == null) {
+            throw new IllegalArgumentException("Categoria não pode ser nula.");
+        }
         categorias.add(categoria);
     }
 

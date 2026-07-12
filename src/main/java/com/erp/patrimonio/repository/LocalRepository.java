@@ -15,9 +15,13 @@ public class LocalRepository {
     }
 
     public void salvar(Local local) {
+        if (local == null) {
+            throw new IllegalArgumentException("Local não pode ser nulo.");
+        }
+
         locais.add(local);
     }
-
+    
     public boolean atualizar(Local local) {
         for (int i = 0; i < locais.size(); i++) {
             if (locais.get(i).getId() == local.getId()) {

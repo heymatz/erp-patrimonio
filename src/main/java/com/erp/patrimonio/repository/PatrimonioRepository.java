@@ -15,6 +15,10 @@ public class PatrimonioRepository {
     }
 
     public void salvar(Patrimonio patrimonio) {
+        if (patrimonio == null) {
+            throw new IllegalArgumentException("Patrimônio não pode ser nulo.");
+        }
+
         patrimonios.add(patrimonio);
     }
 

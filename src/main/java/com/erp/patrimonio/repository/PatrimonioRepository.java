@@ -36,6 +36,21 @@ public class PatrimonioRepository {
         return patrimonios.removeIf(patrimonio -> patrimonio.getId() == id);
     }
 
+    public Patrimonio buscarPorNome(String nome) {
+        if (nome == null) {
+            return null;
+        }
+
+        nome = nome.trim();
+
+        for (Patrimonio patrimonio : patrimonios) {
+            if (patrimonio.getNome().equalsIgnoreCase(nome)) {
+                return patrimonio;
+            }
+        }
+        return null;
+    }
+
     public Patrimonio buscarPorId(int id) {
         for (Patrimonio patrimonio : patrimonios) {
             if (patrimonio.getId() == id) {
@@ -46,11 +61,18 @@ public class PatrimonioRepository {
     }
 
     public Patrimonio buscarPorNumeroSerie(String numeroSerie) {
+        if (numeroSerie == null) {
+            return null;
+        }
+
+        numeroSerie = numeroSerie.trim();
+
         for (Patrimonio patrimonio : patrimonios) {
-            if (patrimonio.getNumeroSerie().equals(numeroSerie)) {
+            if (patrimonio.getNumeroSerie().equalsIgnoreCase(numeroSerie)) {
                 return patrimonio;
             }
         }
+
         return null;
     }
 

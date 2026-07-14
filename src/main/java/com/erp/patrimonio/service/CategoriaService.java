@@ -2,6 +2,8 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.repository.CategoriaRepository;
 
@@ -9,6 +11,9 @@ public class CategoriaService {
 
     private static final String ERRO_CATEGORIA_NAO_ENCONTRADA
             = "Categoria não encontrada.";
+
+    private static final String ERRO_CATEGORIA_DUPLICADA
+            = "Já existe uma categoria com esse nome.";
 
     private static final String ERRO_FALHA_ATUALIZACAO
             = "Falha ao atualizar categoria.";
@@ -20,6 +25,10 @@ public class CategoriaService {
     }
 
     public Categoria cadastrar(String nome, String descricao) {
+
+        if (repository.buscarPorNome(nome) != null) {
+            throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
+        }
 
         int id = repository.gerarProximoId();
 
@@ -33,6 +42,12 @@ public class CategoriaService {
     public Categoria atualizar(int id, String nome, String descricao) {
 
         Categoria categoria = buscarPorId(id);
+
+        Categoria existente = repository.buscarPorNome(nome);
+
+        if (existente != null && existente.getId() != id) {
+            throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
+        }
 
         categoria.setNome(nome);
         categoria.setDescricao(descricao);
@@ -56,7 +71,7 @@ public class CategoriaService {
         Categoria categoria = repository.buscarPorId(id);
 
         if (categoria == null) {
-            throw new IllegalArgumentException(ERRO_CATEGORIA_NAO_ENCONTRADA);
+            throw new EntidadeNaoEncontradaException(ERRO_CATEGORIA_NAO_ENCONTRADA);
         }
 
         return categoria;

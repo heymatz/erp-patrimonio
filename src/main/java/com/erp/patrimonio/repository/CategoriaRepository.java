@@ -35,6 +35,21 @@ public class CategoriaRepository {
         return categorias.removeIf(categoria -> categoria.getId() == id);
     }
 
+    public Categoria buscarPorNome(String nome) {
+        if (nome == null) {
+            return null;
+        }
+
+        nome = nome.trim();
+
+        for (Categoria categoria : categorias) {
+            if (categoria.getNome().equalsIgnoreCase(nome)) {
+                return categoria;
+            }
+        }
+        return null;
+    }
+
     public Categoria buscarPorId(int id) {
         for (Categoria categoria : categorias) {
             if (categoria.getId() == id) {

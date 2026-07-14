@@ -2,14 +2,19 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.repository.LocalRepository;
 
 public class LocalService {
 
     private static final String ERRO_LOCAL_NAO_ENCONTRADO
-            = "Local não encontrado."; 
-                           
+            = "Local não encontrado.";
+
+    private static final String ERRO_LOCAL_DUPLICADO
+            = "Já existe um local com esse nome.";
+
     private static final String ERRO_FALHA_ATUALIZACAO
             = "Falha ao atualizar local.";
 
@@ -20,6 +25,11 @@ public class LocalService {
     }
 
     public Local cadastrar(String nome, String descricao) {
+
+        if (repository.buscarPorNome(nome) != null) {
+            throw new DuplicidadeException(ERRO_LOCAL_DUPLICADO);
+        }
+
         int id = repository.gerarProximoId();
 
         Local local = new Local(id, nome, descricao);
@@ -31,6 +41,11 @@ public class LocalService {
 
     public Local atualizar(int id, String nome, String descricao) {
         Local local = buscarPorId(id);
+        Local existente = repository.buscarPorNome(nome);
+
+        if (existente != null && existente.getId() != id) {
+            throw new DuplicidadeException(ERRO_LOCAL_DUPLICADO);
+        }
 
         local.setNome(nome);
         local.setDescricao(descricao);
@@ -52,7 +67,7 @@ public class LocalService {
     public Local buscarPorId(int id) {
         Local local = repository.buscarPorId(id);
         if (local == null) {
-            throw new IllegalArgumentException(ERRO_LOCAL_NAO_ENCONTRADO);
+            throw new EntidadeNaoEncontradaException(ERRO_LOCAL_NAO_ENCONTRADO);
         }
         return local;
     }

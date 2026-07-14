@@ -2,6 +2,8 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
@@ -14,9 +16,12 @@ public class PatrimonioService {
 
     private static final String ERRO_PATRIMONIO_NAO_ENCONTRADO
             = "Patrimônio não encontrado.";
-            
+
     private static final String ERRO_FALHA_ATUALIZACAO
             = "Falha ao atualizar patrimônio.";
+
+    private static final String ERRO_PATRIMONIO_DUPLICADO
+            = "Já existe um patrimônio com esse nome.";
 
     private final PatrimonioRepository repository;
 
@@ -32,13 +37,20 @@ public class PatrimonioService {
             String numeroSerie,
             double valor) {
 
-        Patrimonio existente = repository.buscarPorNumeroSerie(numeroSerie);
+        Patrimonio existenteNome = repository.buscarPorNome(nome);
 
-        if (existente != null) {
-            throw new IllegalArgumentException(ERRO_NUMERO_SERIE_DUPLICADO);
+        if (existenteNome != null) {
+            throw new DuplicidadeException(ERRO_PATRIMONIO_DUPLICADO);
+        }
+
+        Patrimonio existenteNumeroSerie = repository.buscarPorNumeroSerie(numeroSerie);
+
+        if (existenteNumeroSerie != null) {
+            throw new DuplicidadeException(ERRO_NUMERO_SERIE_DUPLICADO);
         }
 
         int id = repository.gerarProximoId();
+
         Patrimonio patrimonio = new Patrimonio(
                 id,
                 nome,
@@ -64,7 +76,7 @@ public class PatrimonioService {
     public Patrimonio buscarPorId(int id) {
         Patrimonio patrimonio = repository.buscarPorId(id);
         if (patrimonio == null) {
-            throw new IllegalArgumentException(ERRO_PATRIMONIO_NAO_ENCONTRADO);
+            throw new EntidadeNaoEncontradaException(ERRO_PATRIMONIO_NAO_ENCONTRADO);
         }
         return patrimonio;
     }
@@ -80,9 +92,16 @@ public class PatrimonioService {
 
         buscarPorId(id);
 
-        Patrimonio existente = repository.buscarPorNumeroSerie(numeroSerie);
-        if (existente != null && existente.getId() != id) {
-            throw new IllegalArgumentException(ERRO_NUMERO_SERIE_DUPLICADO);
+        Patrimonio existenteNome = repository.buscarPorNome(nome);
+
+        if (existenteNome != null && existenteNome.getId() != id) {
+            throw new DuplicidadeException(ERRO_PATRIMONIO_DUPLICADO);
+        }
+
+        Patrimonio existenteNumeroSerie = repository.buscarPorNumeroSerie(numeroSerie);
+
+        if (existenteNumeroSerie != null && existenteNumeroSerie.getId() != id) {
+            throw new DuplicidadeException(ERRO_NUMERO_SERIE_DUPLICADO);
         }
 
         Patrimonio atualizado = new Patrimonio(
@@ -96,6 +115,7 @@ public class PatrimonioService {
         );
 
         boolean atualizadoComSucesso = repository.atualizar(atualizado);
+
         if (!atualizadoComSucesso) {
             throw new IllegalStateException(ERRO_FALHA_ATUALIZACAO);
         }

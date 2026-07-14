@@ -36,6 +36,21 @@ public class LocalRepository {
         return locais.removeIf(local -> local.getId() == id);
     }
 
+    public Local buscarPorNome(String nome) {
+        if (nome == null) {
+            return null;
+        }
+
+        nome = nome.trim();
+
+        for (Local local : locais) {
+            if (local.getNome().equalsIgnoreCase(nome)) {
+                return local;
+            }
+        }
+        return null;
+    }
+
     public Local buscarPorId(int id) {
         for (Local local : locais) {
             if (local.getId() == id) {

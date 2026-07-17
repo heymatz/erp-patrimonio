@@ -8,10 +8,12 @@ import com.erp.patrimonio.repository.PatrimonioRepository;
 import com.erp.patrimonio.service.CategoriaService;
 import com.erp.patrimonio.service.LocalService;
 import com.erp.patrimonio.service.PatrimonioService;
+import com.erp.patrimonio.util.ConsoleUtils;
 
 public class MenuPrincipal {
 
     private final Scanner scanner;
+    private final ConsoleUtils console;
 
     private final PatrimonioMenu patrimonioMenu;
     private final LocalMenu localMenu;
@@ -20,6 +22,7 @@ public class MenuPrincipal {
     public MenuPrincipal() {
 
         scanner = new Scanner(System.in);
+        console = new ConsoleUtils(scanner);
 
         PatrimonioRepository patrimonioRepository = new PatrimonioRepository();
         LocalRepository localRepository = new LocalRepository();
@@ -35,19 +38,19 @@ public class MenuPrincipal {
                 = new CategoriaService(categoriaRepository);
 
         patrimonioMenu = new PatrimonioMenu(
-                scanner,
+                console,
                 patrimonioService,
                 categoriaService,
                 localService
         );
 
         localMenu = new LocalMenu(
-                scanner,
+                console,
                 localService
         );
 
         categoriaMenu = new CategoriaMenu(
-                scanner,
+                console,
                 categoriaService
         );
     }
@@ -62,7 +65,7 @@ public class MenuPrincipal {
             System.out.println("3 - Categorias");
             System.out.println("0 - Sair");
 
-            opcao = Integer.parseInt(scanner.nextLine());
+            opcao = console.lerInteiro("Escolha uma opção: ");
 
             switch (opcao) {
                 case 1 ->

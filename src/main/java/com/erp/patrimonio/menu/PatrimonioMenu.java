@@ -1,29 +1,27 @@
 package com.erp.patrimonio.menu;
 
-import java.util.Scanner;
-
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.service.CategoriaService;
 import com.erp.patrimonio.service.LocalService;
 import com.erp.patrimonio.service.PatrimonioService;
+import com.erp.patrimonio.util.ConsoleUtils;
 
 public class PatrimonioMenu {
-
-    private final Scanner scanner;
 
     private final PatrimonioService patrimonioService;
     private final CategoriaService categoriaService;
     private final LocalService localService;
+    private final ConsoleUtils console;
 
     public PatrimonioMenu(
-            Scanner scanner,
+            ConsoleUtils console,
             PatrimonioService patrimonioService,
             CategoriaService categoriaService,
             LocalService localService) {
 
-        this.scanner = scanner;
+        this.console = console;
         this.patrimonioService = patrimonioService;
         this.categoriaService = categoriaService;
         this.localService = localService;
@@ -42,7 +40,7 @@ public class PatrimonioMenu {
             System.out.println("5 - Buscar por ID");
             System.out.println("0 - Voltar");
 
-            opcao = Integer.parseInt(scanner.nextLine());
+            opcao = console.lerInteiro("Escolha uma opção: ");
 
             switch (opcao) {
                 case 1 ->
@@ -65,10 +63,8 @@ public class PatrimonioMenu {
     }
 
     private void cadastrarPatrimonio() {
-        System.out.print("Nome: ");
-        String nome = scanner.nextLine();
-        System.out.print("Descrição: ");
-        String descricao = scanner.nextLine();
+        String nome = console.lerTexto("Nome: ");
+        String descricao = console.lerTexto("Descrição: ");
         Categoria categoria = null;
         while (categoria == null) {
             try {
@@ -77,9 +73,7 @@ public class PatrimonioMenu {
                     System.out.println(c);
                 }
 
-                System.out.print("ID da categoria: ");
-                int categoriaId = Integer.parseInt(scanner.nextLine());
-
+                int categoriaId = console.lerInteiro("ID da categoria: ");
                 categoria = categoriaService.buscarPorId(categoriaId);
 
             } catch (IllegalArgumentException e) {
@@ -88,6 +82,7 @@ public class PatrimonioMenu {
         }
 
         Local local = null;
+
         while (local == null) {
             try {
                 System.out.println("=== Locais ===");
@@ -95,19 +90,17 @@ public class PatrimonioMenu {
                     System.out.println(l);
                 }
 
-                System.out.print("ID do local: ");
-                int localId = Integer.parseInt(scanner.nextLine());
-
+                int localId = console.lerInteiro("ID do local: ");
                 local = localService.buscarPorId(localId);
 
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
             }
         }
-        System.out.print("Número de série: ");
-        String numeroSerie = scanner.nextLine();
-        System.out.print("Valor: ");
-        double valor = Double.parseDouble(scanner.nextLine());
+
+        String numeroSerie = console.lerTexto("Número de série: ");
+        double valor = console.lerDouble("Valor: ");
+
         try {
             patrimonioService.cadastrar(
                     nome,
@@ -124,18 +117,18 @@ public class PatrimonioMenu {
     }
 
     private void atualizarPatrimonio() {
-        System.out.print("ID do patrimônio a ser atualizado: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do patrimônio a ser atualizado: ");
 
         try {
             Patrimonio patrimonioExistente = patrimonioService.buscarPorId(id);
 
-            System.out.print("Novo nome (atual: " + patrimonioExistente.getNome() + "): ");
-            String novoNome = scanner.nextLine();
-
-            System.out.print("Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): ");
-            String novaDescricao = scanner.nextLine();
-
+            String novoNome = console.lerTexto(
+                    "Novo nome (atual: " + patrimonioExistente.getNome() + "): "
+            );
+            String novaDescricao = console.lerTexto(
+                    "Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): "
+            );
             patrimonioService.atualizar(
                     id,
                     novoNome.isEmpty() ? patrimonioExistente.getNome() : novoNome,
@@ -153,8 +146,8 @@ public class PatrimonioMenu {
     }
 
     private void removerPatrimonio() {
-        System.out.print("ID do patrimônio a ser removido: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do patrimônio a ser removido: ");
 
         try {
             patrimonioService.remover(id);
@@ -172,8 +165,8 @@ public class PatrimonioMenu {
     }
 
     private void buscarPatrimonioPorId() {
-        System.out.print("ID do patrimônio a ser buscado: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do patrimônio a ser buscado: ");
 
         try {
             Patrimonio patrimonio = patrimonioService.buscarPorId(id);

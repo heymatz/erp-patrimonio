@@ -1,20 +1,19 @@
 package com.erp.patrimonio.menu;
 
-import java.util.Scanner;
-
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.service.CategoriaService;
+import com.erp.patrimonio.util.ConsoleUtils;
 
 public class CategoriaMenu {
 
-    private final Scanner scanner;
+    private final ConsoleUtils console;
     private final CategoriaService categoriaService;
 
     public CategoriaMenu(
-            Scanner scanner,
+            ConsoleUtils console,
             CategoriaService categoriaService) {
 
-        this.scanner = scanner;
+        this.console = console;
         this.categoriaService = categoriaService;
     }
 
@@ -31,7 +30,7 @@ public class CategoriaMenu {
             System.out.println("5 - Buscar por ID");
             System.out.println("0 - Voltar");
 
-            opcao = Integer.parseInt(scanner.nextLine());
+            opcao = console.lerInteiro("Escolha uma opção: ");
 
             switch (opcao) {
                 case 1 ->
@@ -54,10 +53,9 @@ public class CategoriaMenu {
     }
 
     private void cadastrarCategoria() {
-        System.out.print("Nome da categoria: ");
-        String nome = scanner.nextLine();
-        System.out.print("Descrição da categoria: ");
-        String descricao = scanner.nextLine();
+
+        String nome = console.lerTexto("Nome da categoria: ");
+        String descricao = console.lerTexto("Descrição da categoria: ");
 
         try {
             categoriaService.cadastrar(nome, descricao);
@@ -68,17 +66,15 @@ public class CategoriaMenu {
     }
 
     private void atualizarCategoria() {
-        System.out.print("ID da categoria a ser atualizada: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID da categoria a ser atualizada: ");
 
         try {
             Categoria categoriaExistente = categoriaService.buscarPorId(id);
-
-            System.out.print("Novo nome (atual: " + categoriaExistente.getNome() + "): ");
-            String novoNome = scanner.nextLine();
-
-            System.out.print("Nova descrição (atual: " + categoriaExistente.getDescricao() + "): ");
-            String novaDescricao = scanner.nextLine();
+            String novoNome = console.lerTexto(
+                    "Novo nome (atual: " + categoriaExistente.getNome() + "): ");
+            String novaDescricao = console.lerTexto(
+                    "Nova descrição (atual: " + categoriaExistente.getDescricao() + "): ");
 
             categoriaService.atualizar(
                     id,
@@ -93,8 +89,8 @@ public class CategoriaMenu {
     }
 
     private void removerCategoria() {
-        System.out.print("ID da categoria a ser removida: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID da categoria a ser removida: ");
 
         try {
             categoriaService.remover(id);
@@ -112,8 +108,8 @@ public class CategoriaMenu {
     }
 
     private void buscarCategoriaPorId() {
-        System.out.print("ID da categoria a ser buscada: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID da categoria a ser buscada: ");
 
         try {
             Categoria categoria = categoriaService.buscarPorId(id);

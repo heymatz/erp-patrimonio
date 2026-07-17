@@ -1,20 +1,19 @@
 package com.erp.patrimonio.menu;
 
-import java.util.Scanner;
-
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.service.LocalService;
+import com.erp.patrimonio.util.ConsoleUtils;
 
 public class LocalMenu {
 
-    private final Scanner scanner;
+    private final ConsoleUtils console;
     private final LocalService localService;
 
     public LocalMenu(
-            Scanner scanner,
+            ConsoleUtils console,
             LocalService localService) {
 
-        this.scanner = scanner;
+        this.console = console;
         this.localService = localService;
     }
 
@@ -32,7 +31,7 @@ public class LocalMenu {
             System.out.println("5 - Buscar por ID");
             System.out.println("0 - Voltar");
 
-            opcao = Integer.parseInt(scanner.nextLine());
+            opcao = console.lerInteiro("Escolha uma opção: ");
 
             switch (opcao) {
 
@@ -57,10 +56,9 @@ public class LocalMenu {
     }
 
     private void cadastrarLocal() {
-        System.out.print("Nome do local: ");
-        String nome = scanner.nextLine();
-        System.out.print("Descrição do local: ");
-        String descricao = scanner.nextLine();
+
+        String nome = console.lerTexto("Nome do local: ");
+        String descricao = console.lerTexto("Descrição do local: ");
 
         try {
             localService.cadastrar(nome, descricao);
@@ -71,17 +69,19 @@ public class LocalMenu {
     }
 
     private void atualizarLocal() {
-        System.out.print("ID do local a ser atualizado: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do local a ser atualizado: ");
 
         try {
             Local localExistente = localService.buscarPorId(id);
 
-            System.out.print("Novo nome (atual: " + localExistente.getNome() + "): ");
-            String novoNome = scanner.nextLine();
+            String novoNome = console.lerTexto(
+                    "Novo nome (atual: " + localExistente.getNome() + "): "
+            );
 
-            System.out.print("Nova descrição (atual: " + localExistente.getDescricao() + "): ");
-            String novaDescricao = scanner.nextLine();
+            String novaDescricao = console.lerTexto(
+                    "Nova descrição (atual: " + localExistente.getDescricao() + "): "
+            );
 
             localService.atualizar(
                     id,
@@ -96,8 +96,8 @@ public class LocalMenu {
     }
 
     private void removerLocal() {
-        System.out.print("ID do local a ser removido: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do local a ser removido: ");
 
         try {
             localService.remover(id);
@@ -115,8 +115,8 @@ public class LocalMenu {
     }
 
     private void buscarLocalPorId() {
-        System.out.print("ID do local a ser buscado: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        int id = console.lerInteiro("ID do local a ser buscado: ");
 
         try {
             Local local = localService.buscarPorId(id);

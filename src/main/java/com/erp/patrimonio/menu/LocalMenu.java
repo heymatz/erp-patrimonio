@@ -95,8 +95,7 @@ public class LocalMenu {
             System.out.println("Local atualizado com sucesso!");
         } catch (EntidadeNaoEncontradaException
                 | DuplicidadeException
-                | ValidacaoException
-                | IllegalStateException e) {
+                | ValidacaoException e) {
             System.out.println("Erro ao atualizar local: " + e.getMessage());
         }
     }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.EstadoInvalidoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.repository.CategoriaRepository;
 
@@ -16,8 +17,8 @@ public class CategoriaService {
             = "Já existe uma categoria com esse nome.";
 
     private static final String ERRO_FALHA_ATUALIZACAO
-            = "Falha ao atualizar categoria.";
-
+            = "Falha ao atualizar a categoria. O registro pode ter sido alterado ou removido.";
+            
     private final CategoriaRepository repository;
 
     public CategoriaService(CategoriaRepository repository) {
@@ -55,7 +56,7 @@ public class CategoriaService {
         boolean atualizado = repository.atualizar(categoria);
 
         if (!atualizado) {
-            throw new IllegalStateException(ERRO_FALHA_ATUALIZACAO);
+            throw new EstadoInvalidoException(ERRO_FALHA_ATUALIZACAO);
         }
 
         return categoria;

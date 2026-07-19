@@ -145,8 +145,7 @@ public class PatrimonioMenu {
             System.out.println("Patrimônio atualizado com sucesso!");
         } catch (EntidadeNaoEncontradaException
                 | DuplicidadeException
-                | ValidacaoException
-                | IllegalStateException e) {
+                | ValidacaoException e) {
             System.out.println("Erro ao atualizar patrimônio: " + e.getMessage());
         }
     }

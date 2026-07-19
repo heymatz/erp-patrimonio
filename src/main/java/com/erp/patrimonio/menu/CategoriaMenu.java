@@ -88,8 +88,7 @@ public class CategoriaMenu {
             System.out.println("Categoria atualizada com sucesso!");
         } catch (EntidadeNaoEncontradaException
                 | DuplicidadeException
-                | ValidacaoException
-                | IllegalStateException e) {
+                | ValidacaoException e) {
             System.out.println("Erro ao atualizar categoria: " + e.getMessage());
         }
     }

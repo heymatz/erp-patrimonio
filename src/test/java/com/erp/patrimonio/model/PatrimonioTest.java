@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.exception.ValidacaoException;
+
 class PatrimonioTest {
 
     private int id;
@@ -56,7 +58,7 @@ class PatrimonioTest {
     @Test
     void deveLancarExcecaoQuandoNomeForNulo() {
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         null,
@@ -70,7 +72,7 @@ class PatrimonioTest {
     @Test
     void deveLancarExcecaoQuandoNomeForVazio() {
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         "",
@@ -86,7 +88,7 @@ class PatrimonioTest {
 
         String nomeGrande = "A".repeat(101);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         nomeGrande,
@@ -100,7 +102,7 @@ class PatrimonioTest {
     @Test
     void deveLancarExcecaoQuandoDescricaoForNula() {
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         nome,
@@ -114,7 +116,7 @@ class PatrimonioTest {
     @Test
     void deveLancarExcecaoQuandoDescricaoForVazia() {
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         nome,
@@ -130,7 +132,7 @@ class PatrimonioTest {
 
         String descricaoGrande = "A".repeat(256);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Patrimonio(
                         id,
                         nome,
@@ -170,7 +172,7 @@ class PatrimonioTest {
                 numeroSerie,
                 valor);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> patrimonio.setValor(-1));
     }
 

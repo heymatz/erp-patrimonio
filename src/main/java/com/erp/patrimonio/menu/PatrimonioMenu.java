@@ -1,5 +1,8 @@
 package com.erp.patrimonio.menu;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
@@ -76,7 +79,7 @@ public class PatrimonioMenu {
                 int categoriaId = console.lerInteiro("ID da categoria: ");
                 categoria = categoriaService.buscarPorId(categoriaId);
 
-            } catch (IllegalArgumentException e) {
+            } catch (EntidadeNaoEncontradaException e) {
                 System.out.println(e.getMessage());
             }
         }
@@ -93,7 +96,7 @@ public class PatrimonioMenu {
                 int localId = console.lerInteiro("ID do local: ");
                 local = localService.buscarPorId(localId);
 
-            } catch (IllegalArgumentException e) {
+            } catch (EntidadeNaoEncontradaException e) {
                 System.out.println(e.getMessage());
             }
         }
@@ -111,7 +114,7 @@ public class PatrimonioMenu {
                     valor
             );
             System.out.println("Patrimônio cadastrado com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (DuplicidadeException | ValidacaoException e) {
             System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
         }
     }
@@ -140,7 +143,10 @@ public class PatrimonioMenu {
             );
 
             System.out.println("Patrimônio atualizado com sucesso!");
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (EntidadeNaoEncontradaException
+                | DuplicidadeException
+                | ValidacaoException
+                | IllegalStateException e) {
             System.out.println("Erro ao atualizar patrimônio: " + e.getMessage());
         }
     }
@@ -152,7 +158,7 @@ public class PatrimonioMenu {
         try {
             patrimonioService.remover(id);
             System.out.println("Patrimônio removido com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao remover patrimônio: " + e.getMessage());
         }
     }
@@ -171,7 +177,7 @@ public class PatrimonioMenu {
         try {
             Patrimonio patrimonio = patrimonioService.buscarPorId(id);
             System.out.println(patrimonio);
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println(e.getMessage());
         }
     }

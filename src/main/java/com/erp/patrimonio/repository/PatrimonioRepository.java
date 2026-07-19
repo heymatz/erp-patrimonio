@@ -3,6 +3,7 @@ package com.erp.patrimonio.repository;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Patrimonio;
 
 public class PatrimonioRepository {
@@ -16,13 +17,17 @@ public class PatrimonioRepository {
 
     public void salvar(Patrimonio patrimonio) {
         if (patrimonio == null) {
-            throw new IllegalArgumentException("Patrimônio não pode ser nulo.");
+            throw new ValidacaoException("Patrimônio não pode ser nulo.");
         }
 
         patrimonios.add(patrimonio);
     }
 
     public boolean atualizar(Patrimonio patrimonio) {
+        if (patrimonio == null) {
+            throw new ValidacaoException("Patrimônio não pode ser nulo.");
+        }
+
         for (int i = 0; i < patrimonios.size(); i++) {
             if (patrimonios.get(i).getId() == patrimonio.getId()) {
                 patrimonios.set(i, patrimonio);
@@ -37,7 +42,7 @@ public class PatrimonioRepository {
     }
 
     public Patrimonio buscarPorNome(String nome) {
-        if (nome == null) {
+        if (nome == null || nome.isBlank()) {
             return null;
         }
 
@@ -61,7 +66,7 @@ public class PatrimonioRepository {
     }
 
     public Patrimonio buscarPorNumeroSerie(String numeroSerie) {
-        if (numeroSerie == null) {
+        if (numeroSerie == null || numeroSerie.isBlank()) {
             return null;
         }
 

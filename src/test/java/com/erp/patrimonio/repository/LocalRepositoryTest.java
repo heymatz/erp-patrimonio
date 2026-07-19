@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
 
 public class LocalRepositoryTest {
@@ -39,7 +40,7 @@ public class LocalRepositoryTest {
     @Test
     void deveLancarExcecaoQuandoSalvarLocalNulo() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> localRepository.salvar(null)
         );
     }

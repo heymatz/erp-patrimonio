@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.exception.ValidacaoException;
+
 class CategoriaTest {
 
     private static final int id = 1;
@@ -31,7 +33,7 @@ class CategoriaTest {
     void deveLancarExcecaoQuandoNomeForNulo() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, null, descricao)
         );
     }
@@ -39,7 +41,7 @@ class CategoriaTest {
     @Test
     void deveLancarExcecaoQuandoDescricaoForNula() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, nome, null)
         );
     }
@@ -47,7 +49,7 @@ class CategoriaTest {
     @Test
     void deveLancarExcecaoQuandoNomeForVazio() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, "", descricao)
         );
     }
@@ -55,7 +57,7 @@ class CategoriaTest {
     @Test
     void deveLancarExcecaoQuandoDescricaoForVazia() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, nome, "")
         );
     }
@@ -66,7 +68,7 @@ class CategoriaTest {
         String nomeExcedente = "A".repeat(101);
 
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, nomeExcedente, descricao)
         );
     }
@@ -77,7 +79,7 @@ class CategoriaTest {
         String descricaoExcedente = "A".repeat(256);
 
         assertThrows(
-                IllegalArgumentException.class,
+                ValidacaoException.class,
                 () -> new Categoria(id, nome, descricaoExcedente)
         );
     }

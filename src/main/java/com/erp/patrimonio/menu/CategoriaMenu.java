@@ -1,5 +1,8 @@
 package com.erp.patrimonio.menu;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.service.CategoriaService;
 import com.erp.patrimonio.util.ConsoleUtils;
@@ -60,7 +63,7 @@ public class CategoriaMenu {
         try {
             categoriaService.cadastrar(nome, descricao);
             System.out.println("Categoria cadastrada com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (DuplicidadeException | ValidacaoException e) {
             System.out.println("Erro ao cadastrar categoria: " + e.getMessage());
         }
     }
@@ -83,7 +86,10 @@ public class CategoriaMenu {
             );
 
             System.out.println("Categoria atualizada com sucesso!");
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (EntidadeNaoEncontradaException
+                | DuplicidadeException
+                | ValidacaoException
+                | IllegalStateException e) {
             System.out.println("Erro ao atualizar categoria: " + e.getMessage());
         }
     }
@@ -95,7 +101,7 @@ public class CategoriaMenu {
         try {
             categoriaService.remover(id);
             System.out.println("Categoria removida com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao remover categoria: " + e.getMessage());
         }
     }
@@ -114,7 +120,7 @@ public class CategoriaMenu {
         try {
             Categoria categoria = categoriaService.buscarPorId(id);
             System.out.println("Categoria encontrada: " + categoria);
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao buscar categoria: " + e.getMessage());
         }
     }

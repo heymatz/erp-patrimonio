@@ -3,6 +3,7 @@ package com.erp.patrimonio.repository;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 
 public class CategoriaRepository {
@@ -16,12 +17,16 @@ public class CategoriaRepository {
 
     public void salvar(Categoria categoria) {
         if (categoria == null) {
-            throw new IllegalArgumentException("Categoria não pode ser nula.");
+            throw new ValidacaoException("Categoria não pode ser nula.");
         }
         categorias.add(categoria);
     }
 
     public boolean atualizar(Categoria categoria) {
+        if (categoria == null) {
+            throw new ValidacaoException("Categoria não pode ser nula.");
+        }
+
         for (int i = 0; i < categorias.size(); i++) {
             if (categorias.get(i).getId() == categoria.getId()) {
                 categorias.set(i, categoria);
@@ -36,7 +41,7 @@ public class CategoriaRepository {
     }
 
     public Categoria buscarPorNome(String nome) {
-        if (nome == null) {
+        if (nome == null || nome.isBlank()) {
             return null;
         }
 

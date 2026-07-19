@@ -3,6 +3,7 @@ package com.erp.patrimonio.repository;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
 
 public class LocalRepository {
@@ -16,13 +17,17 @@ public class LocalRepository {
 
     public void salvar(Local local) {
         if (local == null) {
-            throw new IllegalArgumentException("Local não pode ser nulo.");
+            throw new ValidacaoException("Local não pode ser nulo.");
         }
 
         locais.add(local);
     }
-    
+
     public boolean atualizar(Local local) {
+        if (local == null) {
+            throw new ValidacaoException("Local não pode ser nulo.");
+        }
+
         for (int i = 0; i < locais.size(); i++) {
             if (locais.get(i).getId() == local.getId()) {
                 locais.set(i, local);
@@ -37,7 +42,7 @@ public class LocalRepository {
     }
 
     public Local buscarPorNome(String nome) {
-        if (nome == null) {
+        if (nome == null || nome.isBlank()) {
             return null;
         }
 

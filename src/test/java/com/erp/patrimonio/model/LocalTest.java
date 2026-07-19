@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.exception.ValidacaoException;
+
 class LocalTest {
 
     private int id;
@@ -32,25 +34,25 @@ class LocalTest {
 
     @Test
     void deveLancarExcecaoQuandoNomeForNulo() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, null, descricao));
     }
 
     @Test
     void deveLancarExcecaoQuandoDescricaoForNula() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, nome, null));
     }
 
     @Test
     void deveLancarExcecaoQuandoNomeForVazio() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, "", descricao));
     }
 
     @Test
     void deveLancarExcecaoQuandoDescricaoForVazia() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, nome, ""));
     }
 
@@ -59,7 +61,7 @@ class LocalTest {
 
         String nomeGrande = "A".repeat(101);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, nomeGrande, descricao));
     }
 
@@ -68,7 +70,7 @@ class LocalTest {
 
         String descricaoGrande = "A".repeat(256);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValidacaoException.class,
                 () -> new Local(id, nome, descricaoGrande));
     }
 }

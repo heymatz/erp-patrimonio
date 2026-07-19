@@ -1,5 +1,8 @@
 package com.erp.patrimonio.menu;
 
+import com.erp.patrimonio.exception.DuplicidadeException;
+import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.service.LocalService;
 import com.erp.patrimonio.util.ConsoleUtils;
@@ -63,7 +66,7 @@ public class LocalMenu {
         try {
             localService.cadastrar(nome, descricao);
             System.out.println("Local cadastrado com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (DuplicidadeException | ValidacaoException e) {
             System.out.println("Erro ao cadastrar local: " + e.getMessage());
         }
     }
@@ -90,7 +93,10 @@ public class LocalMenu {
             );
 
             System.out.println("Local atualizado com sucesso!");
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (EntidadeNaoEncontradaException
+                | DuplicidadeException
+                | ValidacaoException
+                | IllegalStateException e) {
             System.out.println("Erro ao atualizar local: " + e.getMessage());
         }
     }
@@ -102,7 +108,7 @@ public class LocalMenu {
         try {
             localService.remover(id);
             System.out.println("Local removido com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao remover local: " + e.getMessage());
         }
     }
@@ -121,7 +127,7 @@ public class LocalMenu {
         try {
             Local local = localService.buscarPorId(id);
             System.out.println("Local encontrado: " + local);
-        } catch (IllegalArgumentException e) {
+        } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao buscar local: " + e.getMessage());
         }
     }

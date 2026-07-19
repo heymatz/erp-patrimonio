@@ -1,11 +1,13 @@
 package com.erp.patrimonio.model;
 
+import com.erp.patrimonio.exception.ValidacaoException;
+
 public class Local {
 
     private static final int MAX_NOME = 100;
     private static final int MAX_DESCRICAO = 255;
 
-    private int id;
+    private final int id; // O ID não muda depois de cadastrado
     private String nome;
     private String descricao;
 
@@ -29,10 +31,13 @@ public class Local {
 
     public void setNome(String nome) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("O nome é obrigatório.");
+            throw new ValidacaoException("O nome é obrigatório.");
         }
+
+        nome = nome.trim();
+
         if (nome.length() > MAX_NOME) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "O nome deve ter no máximo " + MAX_NOME + " caracteres."
             );
         }
@@ -42,10 +47,13 @@ public class Local {
 
     public void setDescricao(String descricao) {
         if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("A descrição é obrigatória.");
+            throw new ValidacaoException("A descrição é obrigatória.");
         }
+
+        descricao = descricao.trim();
+
         if (descricao.length() > MAX_DESCRICAO) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres."
             );
         }

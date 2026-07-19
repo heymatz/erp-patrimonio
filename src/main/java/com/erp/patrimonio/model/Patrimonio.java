@@ -1,12 +1,14 @@
 package com.erp.patrimonio.model;
 
+import com.erp.patrimonio.exception.ValidacaoException;
+
 public class Patrimonio {
 
     private static final int MAX_NOME = 100;
     private static final int MAX_DESCRICAO = 255;
+    private static final int MAX_NUM_SERIE = 50;
 
-    private final int id;
-
+    private final int id; // O ID não muda depois de cadastrado
     private String nome;
     private String descricao;
 
@@ -71,10 +73,13 @@ public class Patrimonio {
 
     public void setNome(String nome) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("O nome é obrigatório.");
+            throw new ValidacaoException("O nome é obrigatório.");
         }
+
+        nome = nome.trim();
+
         if (nome.length() > MAX_NOME) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "O nome deve ter no máximo " + MAX_NOME + " caracteres."
             );
         }
@@ -83,10 +88,13 @@ public class Patrimonio {
 
     public void setDescricao(String descricao) {
         if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("A descrição é obrigatória.");
+            throw new ValidacaoException("A descrição é obrigatória.");
         }
+
+        descricao = descricao.trim();
+
         if (descricao.length() > MAX_DESCRICAO) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres."
             );
         }
@@ -95,7 +103,7 @@ public class Patrimonio {
 
     public void setCategoria(Categoria categoria) {
         if (categoria == null) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "A categoria é obrigatória."
             );
         }
@@ -104,7 +112,7 @@ public class Patrimonio {
 
     public void setLocal(Local local) {
         if (local == null) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "O local é obrigatório."
             );
         }
@@ -113,16 +121,26 @@ public class Patrimonio {
 
     public void setNumeroSerie(String numeroSerie) {
         if (numeroSerie == null || numeroSerie.isBlank()) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "O número de série é obrigatório."
             );
         }
+
+        this.numeroSerie = numeroSerie.trim();
+
+        if (numeroSerie.length() > MAX_NUM_SERIE) {
+            throw new ValidacaoException(
+                "O número de série deve ter no máximo "
+                + MAX_NUM_SERIE + " caracteres."
+            );
+        } // Limitando o tamanho através de uma constante
+
         this.numeroSerie = numeroSerie;
     }
 
     public void setValor(double valor) {
         if (valor <= 0) {
-            throw new IllegalArgumentException(
+            throw new ValidacaoException(
                     "O valor deve ser maior que zero."
             );
         }

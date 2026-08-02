@@ -2,6 +2,7 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.EstadoInvalidoException;
@@ -36,7 +37,8 @@ public class PatrimonioService {
             Categoria categoria,
             Local local,
             String numeroSerie,
-            double valor) {
+            double valor, 
+            UnidadeMedida unidadeMedida) {
 
         Patrimonio existenteNome = repository.buscarPorNome(nome);
 
@@ -59,7 +61,8 @@ public class PatrimonioService {
                 categoria,
                 local,
                 numeroSerie,
-                valor
+                valor,
+                unidadeMedida
         );
         repository.salvar(patrimonio);
         return patrimonio;
@@ -89,7 +92,8 @@ public class PatrimonioService {
             Categoria categoria,
             Local local,
             String numeroSerie,
-            double valor) {
+            double valor,
+            UnidadeMedida unidadeMedida) {
 
         buscarPorId(id);
 
@@ -112,7 +116,8 @@ public class PatrimonioService {
                 categoria,
                 local,
                 numeroSerie,
-                valor
+                valor,
+                unidadeMedida
         );
 
         boolean atualizadoComSucesso = repository.atualizar(atualizado);

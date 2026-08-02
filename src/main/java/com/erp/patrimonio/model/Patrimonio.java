@@ -1,5 +1,6 @@
 package com.erp.patrimonio.model;
 
+import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 
 public class Patrimonio {
@@ -18,6 +19,7 @@ public class Patrimonio {
     private String numeroSerie;
     private double valor;
     private boolean ativo;
+    private UnidadeMedida unidadeMedida;
 
     public Patrimonio(
             int id,
@@ -26,7 +28,8 @@ public class Patrimonio {
             Categoria categoria,
             Local local,
             String numeroSerie,
-            double valor) {
+            double valor,
+            UnidadeMedida unidadeMedida) {
 
         this.id = id;
 
@@ -36,6 +39,7 @@ public class Patrimonio {
         setLocal(local);
         setNumeroSerie(numeroSerie);
         setValor(valor);
+        setUnidadeMedida(unidadeMedida);
         this.ativo = true;
     }
 
@@ -65,6 +69,10 @@ public class Patrimonio {
 
     public double getValor() {
         return valor;
+    }
+
+    public UnidadeMedida getUnidadeMedida() {
+        return unidadeMedida;
     }
 
     public boolean isAtivo() {
@@ -130,8 +138,8 @@ public class Patrimonio {
 
         if (numeroSerie.length() > MAX_NUM_SERIE) {
             throw new ValidacaoException(
-                "O número de série deve ter no máximo "
-                + MAX_NUM_SERIE + " caracteres."
+                    "O número de série deve ter no máximo "
+                    + MAX_NUM_SERIE + " caracteres."
             );
         } // Limitando o tamanho através de uma constante
 
@@ -145,6 +153,14 @@ public class Patrimonio {
             );
         }
         this.valor = valor;
+    }
+
+    public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
+        if (unidadeMedida == null) {
+            throw new ValidacaoException("A unidade de medida é obrigatória.");
+        }
+
+        this.unidadeMedida = unidadeMedida;
     }
 
     public void ativar() {
@@ -165,6 +181,7 @@ public class Patrimonio {
                 + ", local=" + local
                 + ", numeroSerie='" + numeroSerie + '\''
                 + ", valor=" + valor
+                + ", unidadeMedida=" + unidadeMedida
                 + ", ativo=" + ativo
                 + '}';
     }

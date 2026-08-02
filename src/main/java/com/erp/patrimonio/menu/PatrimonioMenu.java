@@ -1,5 +1,6 @@
 package com.erp.patrimonio.menu;
 
+import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
@@ -104,18 +105,38 @@ public class PatrimonioMenu {
         String numeroSerie = console.lerTexto("Número de série: ");
         double valor = console.lerDouble("Valor: ");
 
-        try {
-            patrimonioService.cadastrar(
-                    nome,
-                    descricao,
-                    categoria,
-                    local,
-                    numeroSerie,
-                    valor
-            );
-            System.out.println("Patrimônio cadastrado com sucesso!");
-        } catch (DuplicidadeException | ValidacaoException e) {
-            System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
+        UnidadeMedida unidadeMedida = null;
+
+        while (unidadeMedida == null) {
+
+            System.out.println("\n=== Unidades de Medida ===");
+
+            for (UnidadeMedida unidade : UnidadeMedida.values()) {
+                System.out.printf("%-15s (%s)%n",
+                        unidade.name(),
+                        unidade.getSigla());
+            }
+
+            try {
+                String opcao = console.lerTexto("Digite a unidade: ");
+                unidadeMedida = UnidadeMedida.fromString(opcao);
+            } catch (ValidacaoException e) {
+                System.out.println(e.getMessage());
+            }
+            try {
+                patrimonioService.cadastrar(
+                        nome,
+                        descricao,
+                        categoria,
+                        local,
+                        numeroSerie,
+                        valor,
+                        unidadeMedida
+                );
+                System.out.println("Patrimônio cadastrado com sucesso!");
+            } catch (DuplicidadeException | ValidacaoException e) {
+                System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
+            }
         }
     }
 
@@ -139,7 +160,8 @@ public class PatrimonioMenu {
                     patrimonioExistente.getCategoria(),
                     patrimonioExistente.getLocal(),
                     patrimonioExistente.getNumeroSerie(),
-                    patrimonioExistente.getValor()
+                    patrimonioExistente.getValor(),
+                    patrimonioExistente.getUnidadeMedida()
             );
 
             System.out.println("Patrimônio atualizado com sucesso!");

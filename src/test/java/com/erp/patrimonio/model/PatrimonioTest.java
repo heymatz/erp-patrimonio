@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 
 class PatrimonioTest {
@@ -18,7 +19,8 @@ class PatrimonioTest {
     private Local local;
     private String numeroSerie;
     private double valor;
-
+    private UnidadeMedida unidadeMedida;
+    
     @BeforeEach
     void configurar() {
         id = 1;
@@ -28,6 +30,7 @@ class PatrimonioTest {
         local = new Local(1, "Sala 101", "Primeiro andar");
         numeroSerie = "SN123456";
         valor = 5000.00;
+        unidadeMedida = UnidadeMedida.UNIDADE;
     }
 
     @Test
@@ -41,7 +44,8 @@ class PatrimonioTest {
                 categoria,
                 local,
                 numeroSerie,
-                valor
+                valor,
+                unidadeMedida
         );
 
         // Assert
@@ -52,6 +56,7 @@ class PatrimonioTest {
         assertEquals(local, patrimonio.getLocal());
         assertEquals(numeroSerie, patrimonio.getNumeroSerie());
         assertEquals(valor, patrimonio.getValor());
+        assertEquals(unidadeMedida, patrimonio.getUnidadeMedida());
         assertTrue(patrimonio.isAtivo());
     }
 
@@ -66,7 +71,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -80,7 +86,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -96,7 +103,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -110,7 +118,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -124,7 +133,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -140,7 +150,8 @@ class PatrimonioTest {
                         categoria,
                         local,
                         numeroSerie,
-                        valor));
+                        valor,
+                        unidadeMedida));
     }
 
     @Test
@@ -153,7 +164,8 @@ class PatrimonioTest {
                 categoria,
                 local,
                 numeroSerie,
-                valor);
+                valor,
+                unidadeMedida);
 
         patrimonio.setValor(7500);
 
@@ -170,7 +182,8 @@ class PatrimonioTest {
                 categoria,
                 local,
                 numeroSerie,
-                valor);
+                valor,
+                unidadeMedida);
 
         assertThrows(ValidacaoException.class,
                 () -> patrimonio.setValor(-1));
@@ -186,7 +199,8 @@ class PatrimonioTest {
                 categoria,
                 local,
                 numeroSerie,
-                valor);
+                valor,
+                unidadeMedida);
 
         patrimonio.desativar();
         assertFalse(patrimonio.isAtivo());

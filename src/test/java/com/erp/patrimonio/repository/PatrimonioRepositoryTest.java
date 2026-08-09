@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
@@ -40,7 +41,8 @@ public class PatrimonioRepositoryTest {
                 categoria,
                 local,
                 "S123456T",
-                5000.00
+                5000.00,
+                UnidadeMedida.UNIDADE
         );
     }
 
@@ -64,7 +66,8 @@ public class PatrimonioRepositoryTest {
                 categoria,
                 local,
                 "S234567T",
-                2000.00
+                2000.00,
+                UnidadeMedida.UNIDADE
         );
     }
 
@@ -144,6 +147,7 @@ public class PatrimonioRepositoryTest {
         assertEquals(5000.00, patrimonios.get(0).getValor());
         assertEquals("S234567T", patrimonios.get(1).getNumeroSerie());
         assertEquals(2000.00, patrimonios.get(1).getValor());
+        assertEquals(UnidadeMedida.UNIDADE, patrimonios.get(0).getUnidadeMedida());
     }
 
     @Test

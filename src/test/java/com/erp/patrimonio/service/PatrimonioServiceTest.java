@@ -218,7 +218,7 @@ class PatrimonioServiceTest {
                 local,
                 "SN999999",
                 6000.00,
-                UnidadeMedida.UNIDADE
+                UnidadeMedida.CAIXA
         );
 
         assertEquals(patrimonio.getId(), atualizado.getId());
@@ -229,6 +229,7 @@ class PatrimonioServiceTest {
         );
         assertEquals("SN999999", atualizado.getNumeroSerie());
         assertEquals(6000.00, atualizado.getValor());
+        assertEquals(UnidadeMedida.CAIXA, atualizado.getUnidadeMedida());
     }
 
     @Test
@@ -258,7 +259,6 @@ class PatrimonioServiceTest {
     void devePermitirAtualizarMantendoMesmoNumeroSerie() {
 
         Patrimonio patrimonio = cadastrarPatrimonio();
-
         Patrimonio atualizado = patrimonioService.atualizar(
                 patrimonio.getId(),
                 "Notebook Atualizado",
@@ -266,12 +266,13 @@ class PatrimonioServiceTest {
                 categoria,
                 local,
                 "SN123456",
-                5500.00,
-                UnidadeMedida.UNIDADE
+                6000.00,
+                UnidadeMedida.CAIXA // Modifique para uma unidade diferente
         );
 
         assertEquals("Notebook Atualizado", atualizado.getNome());
         assertEquals("SN123456", atualizado.getNumeroSerie());
+        assertEquals(UnidadeMedida.CAIXA, atualizado.getUnidadeMedida());
     }
 
     @Test

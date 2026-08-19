@@ -52,7 +52,7 @@ public class PatrimonioService {
             throw new DuplicidadeException(ERRO_NUMERO_SERIE_DUPLICADO);
         }
 
-        int id = repository.gerarProximoId();
+        int id = 0; // O ID será gerado pelo banco de dados ou pelo repositório
 
         Patrimonio patrimonio = new Patrimonio(
                 id,

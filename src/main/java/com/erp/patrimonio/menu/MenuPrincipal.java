@@ -5,6 +5,7 @@ import java.util.Scanner;
 import com.erp.patrimonio.repository.CategoriaRepository;
 import com.erp.patrimonio.repository.LocalRepository;
 import com.erp.patrimonio.repository.PatrimonioRepository;
+import com.erp.patrimonio.repository.PatrimonioRepositoryInMemory;
 import com.erp.patrimonio.service.CategoriaService;
 import com.erp.patrimonio.service.LocalService;
 import com.erp.patrimonio.service.PatrimonioService;
@@ -24,7 +25,7 @@ public class MenuPrincipal {
         scanner = new Scanner(System.in);
         console = new ConsoleUtils(scanner);
 
-        PatrimonioRepository patrimonioRepository = new PatrimonioRepository();
+        PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryInMemory();
         LocalRepository localRepository = new LocalRepository();
         CategoriaRepository categoriaRepository = new CategoriaRepository();
 

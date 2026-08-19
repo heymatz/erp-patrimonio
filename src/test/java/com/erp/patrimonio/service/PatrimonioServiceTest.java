@@ -15,6 +15,7 @@ import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.repository.PatrimonioRepository;
+import com.erp.patrimonio.repository.PatrimonioRepositoryInMemory;
 
 class PatrimonioServiceTest {
 
@@ -27,7 +28,7 @@ class PatrimonioServiceTest {
     @BeforeEach
     void configurar() {
 
-        patrimonioRepository = new PatrimonioRepository();
+       PatrimonioRepository repository = new PatrimonioRepositoryInMemory();
         patrimonioService = new PatrimonioService(patrimonioRepository);
 
         categoria = new Categoria(

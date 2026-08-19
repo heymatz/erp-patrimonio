@@ -9,7 +9,7 @@ public class Patrimonio {
     private static final int MAX_DESCRICAO = 255;
     private static final int MAX_NUM_SERIE = 50;
 
-    private final int id; // O ID não muda depois de cadastrado
+    private int id;
     private String nome;
     private String descricao;
 
@@ -47,6 +47,10 @@ public class Patrimonio {
         return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+    
     public String getNome() {
         return nome;
     }

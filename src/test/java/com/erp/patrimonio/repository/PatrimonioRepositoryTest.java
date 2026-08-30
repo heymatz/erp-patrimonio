@@ -73,7 +73,7 @@ public class PatrimonioRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        PatrimonioRepository repository = new PatrimonioRepositoryInMemory();
+        patrimonioRepository = new PatrimonioRepositoryInMemory(); // Inicializa o repositório antes de cada teste
     }
 
     @Test

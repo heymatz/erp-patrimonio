@@ -27,17 +27,16 @@ class PatrimonioServiceTest {
 
     @BeforeEach
     void configurar() {
+        this.patrimonioRepository = new PatrimonioRepositoryInMemory(); 
+        this.patrimonioService = new PatrimonioService(this.patrimonioRepository);
 
-       PatrimonioRepository repository = new PatrimonioRepositoryInMemory();
-        patrimonioService = new PatrimonioService(patrimonioRepository);
-
-        categoria = new Categoria(
+        this.categoria = new Categoria(
                 1,
                 "Eletrônicos",
                 "Equipamentos de informática"
         );
 
-        local = new Local(
+        this.local = new Local(
                 1,
                 "Sala 101",
                 "Primeiro andar"

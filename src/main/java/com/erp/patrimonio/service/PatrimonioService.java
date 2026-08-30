@@ -37,7 +37,7 @@ public class PatrimonioService {
             Categoria categoria,
             Local local,
             String numeroSerie,
-            double valor, 
+            double valor,
             UnidadeMedida unidadeMedida) {
 
         Patrimonio existenteNome = repository.buscarPorNome(nome);
@@ -64,8 +64,9 @@ public class PatrimonioService {
                 valor,
                 unidadeMedida
         );
-        repository.salvar(patrimonio);
-        return patrimonio;
+
+        repository.salvar(patrimonio); // Executa o void (o repository atribui o id internamente)
+        return patrimonio;             // Retorna o objeto já com o id gerado
     }
 
     public void remover(int id) {

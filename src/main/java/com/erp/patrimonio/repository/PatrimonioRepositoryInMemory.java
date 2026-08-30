@@ -20,6 +20,10 @@ public class PatrimonioRepositoryInMemory implements PatrimonioRepository {
             throw new ValidacaoException("Patrimônio não pode ser nulo.");
         }
 
+        if (patrimonio.getId() <= 0) {
+            patrimonio.setId(gerarProximoId());
+        }
+
         patrimonios.add(patrimonio);
     }
 

@@ -4,8 +4,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.erp.patrimonio.enums.UnidadeMedida;
@@ -81,5 +86,63 @@ public class PatrimonioRepositoryJdbcTest {
             }
         }
         throw new RuntimeException("Falha ao preparar Local no banco.");
+    }
+
+    @Test
+    @DisplayName("Deve atualizar os dados de um patrimônio existente")
+    void deveAtualizarPatrimonio() {
+        // Arrange
+        PatrimonioRepositoryJdbc repository = new PatrimonioRepositoryJdbc(new ConnectionFactory());
+
+        List<Patrimonio> lista = repository.listarTodos();
+        assertFalse(lista.isEmpty(), "O banco precisa ter pelo menos um patrimônio para testarmos a atualização.");
+
+        Patrimonio patrimonioAlvo = lista.get(0);
+        String nomeOriginal = patrimonioAlvo.getNome();
+        String novoNome = nomeOriginal + " - ATUALIZADO";
+        double novoValor = 9999.99;
+
+        patrimonioAlvo.setNome(novoNome);
+        patrimonioAlvo.setValor(novoValor);
+
+        // Act
+        boolean atualizou = repository.atualizar(patrimonioAlvo);
+
+        // Assert
+        assertTrue(atualizou, "O método atualizar deveria retornar true indicando sucesso.");
+
+        // Busca de volta do banco para confirmar se a mudança persistiu
+        Patrimonio patrimonioModificado = repository.buscarPorId(patrimonioAlvo.getId());
+
+        assertEquals(novoNome, patrimonioModificado.getNome(), "O nome não foi atualizado no banco.");
+        assertEquals(novoValor, patrimonioModificado.getValor(), "O valor não foi atualizado no banco.");
+
+        System.out.println("SUCESSO: Patrimônio atualizado no banco de [" + nomeOriginal + "] para [" + patrimonioModificado.getNome() + "]");
+    }
+
+    @Test
+    @DisplayName("Deve listar todos os patrimônios com Categoria e Local populados")
+    void deveListarTodosOsPatrimonios() {
+        // Arrange
+        PatrimonioRepositoryJdbc repository = new PatrimonioRepositoryJdbc(new ConnectionFactory());
+
+        // Act
+        List<Patrimonio> lista = repository.listarTodos();
+
+        // Assert
+        assertFalse(lista.isEmpty(), "A lista não deveria estar vazia pois salvamos um item anteriormente.");
+
+        Patrimonio patrimonioExtraido = lista.get(0);
+
+        // Valida se o INNER JOIN funcionou e mapeou as dependências
+        assertNotNull(patrimonioExtraido.getCategoria(), "A Categoria veio nula! O mapeamento falhou.");
+        assertTrue(patrimonioExtraido.getCategoria().getId() > 0, "O ID da Categoria não foi mapeado.");
+
+        assertNotNull(patrimonioExtraido.getLocal(), "O Local veio nulo! O mapeamento falhou.");
+        assertTrue(patrimonioExtraido.getLocal().getId() > 0, "O ID do Local não foi mapeado.");
+
+        System.out.println("SUCESSO: Listagem trouxe o patrimônio: " + patrimonioExtraido.getNome()
+                + " | Categoria: " + patrimonioExtraido.getCategoria().getNome()
+                + " | Local: " + patrimonioExtraido.getLocal().getNome());
     }
 }

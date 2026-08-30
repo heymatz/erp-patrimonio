@@ -5,11 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.infra.ConnectionFactory;
+import com.erp.patrimonio.model.Categoria;
+import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 
 public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
@@ -74,24 +77,59 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
             return null;
         }
 
-        String sql = "SELECT * FROM patrimonio WHERE nome = ?";
+        // Consulta SQL para buscar o patrimônio pelo nome, incluindo Categoria e Local
+        String sql = """
+            SELECT 
+                p.id AS patrimonio_id, 
+                p.nome AS patrimonio_nome, 
+                p.descricao AS patrimonio_descricao, 
+                p.valor, 
+                p.unidade_medida, 
+                p.numero_serie,
+                c.id AS categoria_id, 
+                c.nome AS categoria_nome, 
+                c.descricao AS categoria_descricao,
+                l.id AS local_id, 
+                l.nome AS local_nome, 
+                l.descricao AS local_descricao
+            FROM patrimonio p
+            INNER JOIN categoria c ON p.categoria_id = c.id
+            INNER JOIN local l ON p.local_id = l.id
+            WHERE p.nome = ?
+            """;
 
         try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, nome.trim());
 
             try (ResultSet rs = stmt.executeQuery()) {
+                // O 'if' representa que o nome deve ser único, retornando no máximo 1 registro
                 if (rs.next()) {
-                    // Cria o objeto Patrimonio a partir do ResultSet
+
+                    // Mapeamento completo
+                    Categoria categoria = new Categoria(
+                            rs.getInt("categoria_id"),
+                            rs.getString("categoria_nome"),
+                            rs.getString("categoria_descricao")
+                    );
+
+                    Local local = new Local(
+                            rs.getInt("local_id"),
+                            rs.getString("local_nome"),
+                            rs.getString("local_descricao")
+                    );
+
                     Patrimonio patrimonio = new Patrimonio(
-                            rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("descricao"),
-                            null, // Categoria precisa ser buscada separadamente
-                            null, // Local precisa ser buscado separadamente
+                            rs.getInt("patrimonio_id"),
+                            rs.getString("patrimonio_nome"),
+                            rs.getString("patrimonio_descricao"),
+                            categoria,
+                            local,
                             rs.getString("numero_serie"),
                             rs.getDouble("valor"),
                             UnidadeMedida.valueOf(rs.getString("unidade_medida"))
                     );
+
                     return patrimonio;
                 }
             }
@@ -117,21 +155,249 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
 
     @Override
     public boolean atualizar(Patrimonio patrimonio) {
-        throw new UnsupportedOperationException("Método atualizar ainda não implementado no JDBC.");
+        if (patrimonio == null || patrimonio.getId() <= 0) {
+            throw new ValidacaoException("Patrimônio inválido para atualização.");
+        }
+
+        String sql = """
+                UPDATE patrimonio 
+                SET nome = ?, 
+                    descricao = ?, 
+                    numero_serie = ?, 
+                    valor = ?, 
+                    unidade_medida = ?, 
+                    ativo = ?, 
+                    categoria_id = ?, 
+                    local_id = ?
+                WHERE id = ?
+                """;
+
+        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            //Extrai o id_categoria e o id_local validando se não são nulos
+            if (patrimonio.getCategoria() == null || patrimonio.getCategoria().getId() <= 0) {
+                throw new ValidacaoException("Categoria inválida para atualização do patrimônio.");
+            }
+            if (patrimonio.getLocal() == null || patrimonio.getLocal().getId() <= 0) {
+                throw new ValidacaoException("Local inválido para atualização do patrimônio.");
+            }
+
+            //Injeta os dados do patrimonio nos "setters"
+            stmt.setString(1, patrimonio.getNome());
+            stmt.setString(2, patrimonio.getDescricao());
+            stmt.setString(3, patrimonio.getNumeroSerie());
+            stmt.setDouble(4, patrimonio.getValor());
+            stmt.setString(5, patrimonio.getUnidadeMedida().name());
+            stmt.setBoolean(6, patrimonio.isAtivo());
+            stmt.setInt(7, patrimonio.getCategoria().getId());
+            stmt.setInt(8, patrimonio.getLocal().getId());
+            stmt.setInt(9, patrimonio.getId());
+
+            //Executa o comando e retorna true se alguma linha foi alterada
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar o patrimônio no banco de dados.", e);
+        }
     }
 
     @Override
     public Patrimonio buscarPorId(int id) {
-        throw new UnsupportedOperationException("Método buscarPorId ainda não implementado no JDBC.");
+        if (id <= 0) {
+            return null;
+        }
+
+        // Consulta SQL para buscar o patrimônio pelo id, incluindo Categoria e Local
+        String sql = """
+            SELECT 
+                p.id AS patrimonio_id, 
+                p.nome AS patrimonio_nome, 
+                p.descricao AS patrimonio_descricao, 
+                p.valor, 
+                p.unidade_medida, 
+                p.numero_serie,
+                c.id AS categoria_id, 
+                c.nome AS categoria_nome, 
+                c.descricao AS categoria_descricao,
+                l.id AS local_id, 
+                l.nome AS local_nome, 
+                l.descricao AS local_descricao
+            FROM patrimonio p
+            INNER JOIN categoria c ON p.categoria_id = c.id
+            INNER JOIN local l ON p.local_id = l.id
+            WHERE p.id = ?
+            """;
+
+        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                // O 'if' representa que o id deve ser único, retornando no máximo 1 registro
+                if (rs.next()) {
+
+                    // Mapeamento completo
+                    Categoria categoria = new Categoria(
+                            rs.getInt("categoria_id"),
+                            rs.getString("categoria_nome"),
+                            rs.getString("categoria_descricao")
+                    );
+
+                    Local local = new Local(
+                            rs.getInt("local_id"),
+                            rs.getString("local_nome"),
+                            rs.getString("local_descricao")
+                    );
+
+                    Patrimonio patrimonio = new Patrimonio(
+                            rs.getInt("patrimonio_id"),
+                            rs.getString("patrimonio_nome"),
+                            rs.getString("patrimonio_descricao"),
+                            categoria,
+                            local,
+                            rs.getString("numero_serie"),
+                            rs.getDouble("valor"),
+                            UnidadeMedida.valueOf(rs.getString("unidade_medida"))
+                    );
+
+                    return patrimonio;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erro ao buscar o patrimônio por id no banco de dados.", e);
+        }
+
+        return null;
     }
 
     @Override
     public Patrimonio buscarPorNumeroSerie(String numeroSerie) {
-        throw new UnsupportedOperationException("Método buscarPorNumeroSerie ainda não implementado no JDBC.");
+        if (numeroSerie == null || numeroSerie.isBlank()) {
+            return null;
+        }
+
+        // Consulta SQL para buscar o patrimônio pelo número de série, incluindo Categoria e Local
+        String sql = """
+            SELECT 
+                p.id AS patrimonio_id, 
+                p.nome AS patrimonio_nome, 
+                p.descricao AS patrimonio_descricao, 
+                p.valor, 
+                p.unidade_medida, 
+                p.numero_serie,
+                c.id AS categoria_id, 
+                c.nome AS categoria_nome, 
+                c.descricao AS categoria_descricao,
+                l.id AS local_id, 
+                l.nome AS local_nome, 
+                l.descricao AS local_descricao
+            FROM patrimonio p
+            INNER JOIN categoria c ON p.categoria_id = c.id
+            INNER JOIN local l ON p.local_id = l.id
+            WHERE p.numero_serie = ?
+            """;
+
+        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, numeroSerie.trim());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                // O 'if' representa que o número de série deve ser único, retornando no máximo 1 registro
+                if (rs.next()) {
+
+                    // Mapeamento completo
+                    Categoria categoria = new Categoria(
+                            rs.getInt("categoria_id"),
+                            rs.getString("categoria_nome"),
+                            rs.getString("categoria_descricao")
+                    );
+
+                    Local local = new Local(
+                            rs.getInt("local_id"),
+                            rs.getString("local_nome"),
+                            rs.getString("local_descricao")
+                    );
+
+                    Patrimonio patrimonio = new Patrimonio(
+                            rs.getInt("patrimonio_id"),
+                            rs.getString("patrimonio_nome"),
+                            rs.getString("patrimonio_descricao"),
+                            categoria,
+                            local,
+                            rs.getString("numero_serie"),
+                            rs.getDouble("valor"),
+                            UnidadeMedida.valueOf(rs.getString("unidade_medida"))
+                    );
+
+                    return patrimonio;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erro ao buscar o patrimônio por numero de serie no banco de dados.", e);
+        }
+
+        return null;
     }
 
     @Override
     public List<Patrimonio> listarTodos() {
-        throw new UnsupportedOperationException("Método listarTodos ainda não implementado no JDBC.");
+        List<Patrimonio> patrimonios = new ArrayList<>();
+
+        String sql = """
+            SELECT 
+                p.id AS patrimonio_id, 
+                p.nome AS patrimonio_nome, 
+                p.descricao AS patrimonio_descricao, 
+                p.valor, 
+                p.unidade_medida, 
+                p.numero_serie,
+                c.id AS categoria_id, 
+                c.nome AS categoria_nome, 
+                c.descricao AS categoria_descricao,
+                l.id AS local_id, 
+                l.nome AS local_nome, 
+                l.descricao AS local_descricao
+            FROM patrimonio p
+            INNER JOIN categoria c ON p.categoria_id = c.id
+            INNER JOIN local l ON p.local_id = l.id
+            """;
+
+        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Categoria categoria = new Categoria(
+                        rs.getInt("categoria_id"),
+                        rs.getString("categoria_nome"),
+                        rs.getString("categoria_descricao")
+                );
+
+                Local local = new Local(
+                        rs.getInt("local_id"),
+                        rs.getString("local_nome"),
+                        rs.getString("local_descricao")
+                );
+
+                Patrimonio patrimonio = new Patrimonio(
+                        rs.getInt("patrimonio_id"),
+                        rs.getString("patrimonio_nome"),
+                        rs.getString("patrimonio_descricao"),
+                        categoria,
+                        local,
+                        rs.getString("numero_serie"),
+                        rs.getDouble("valor"),
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida"))
+                );
+                patrimonios.add(patrimonio);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar patrimônios do banco de dados.", e);
+        }
+
+        return patrimonios;
     }
+
 }

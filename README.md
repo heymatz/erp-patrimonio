@@ -1,6 +1,6 @@
 # ERP Patrimônio
 
-Sistema ERP para gerenciamento patrimonial desenvolvido em Java como projeto de estudos, com foco na aplicação de boas práticas de desenvolvimento, arquitetura em camadas e Programação Orientada a Objetos.
+Sistema ERP para gerenciamento patrimonial desenvolvido em Java como projeto de estudos, com foco na aplicação de boas práticas de desenvolvimento, arquitetura em camadas, princípios SOLID e persistência relacional.
 
 ---
 
@@ -11,10 +11,11 @@ Este projeto tem como objetivo consolidar conhecimentos em desenvolvimento backe
 Durante o desenvolvimento são aplicados conceitos como:
 
 - Programação Orientada a Objetos (POO)
-- Arquitetura em Camadas
+- Principios SOLID e Inversão de Dependências
+- Arquitetura em Camadas com Padrão Repository (Interface-driven)
 - Separação de Responsabilidades
-- Injeção de Dependência
-- Tratamento de Exceções
+- Tratamento de Exceções Personalizadas
+- Testes Automatizados (Unitários e Integrados com JUnit 5)
 - Versionamento com Git
 - Gerenciamento de dependências com Maven
 
@@ -29,6 +30,8 @@ Durante o desenvolvimento são aplicados conceitos como:
 - Remoção
 - Busca por ID
 - Listagem
+- Persistência relacional via JDBC (MySQL)
+
 
 ### Categoria
 
@@ -37,6 +40,8 @@ Durante o desenvolvimento são aplicados conceitos como:
 - Remoção
 - Busca por ID
 - Listagem
+- Persistência relacional via JDBC (MySQL)
+
 
 ### Local
 
@@ -45,21 +50,25 @@ Durante o desenvolvimento são aplicados conceitos como:
 - Remoção
 - Busca por ID
 - Listagem
+- Persistência relacional via JDBC (MySQL)
 
 ---
 
 ## Arquitetura
 
-O projeto segue uma arquitetura em camadas:
+O projeto segue uma arquitetura em camadas e adota contratos de repositório para desacoplar a regra de negócio do banco de dados:
 
 ```
-Application
+Application (UI/Menu)
     |
     v
-Service
+Service (Regras de negócio)
     |
     v
-Repository
+Repository (Interfaces/Contratos) 
+    |
+    |-> Implementação JDBC (MySQL)
+    |-> Implementação In-Memory (Testes)
     |
     v
 Model
@@ -72,6 +81,8 @@ Cada camada possui uma responsabilidade específica, facilitando manutenção, t
 ## Tecnologias
 
 - Java 17
+- MySQL
+- JUnit 5
 - Maven
 - Git
 
@@ -101,9 +112,9 @@ mvn clean package
 
 ## Próximas implementações
 
-- Persistência em banco de dados PostgreSQL
-- Testes unitários com JUnit
-- Interface gráfica ou API REST
+- Finalização da persistência JDBC
+- Migração/Suporte a banco de dados PostgreSQL
+- Interface gráfica ou API REST (Spring Boot)
 - Autenticação de usuários
 - Relatórios patrimoniais
 

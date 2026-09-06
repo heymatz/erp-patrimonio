@@ -1,75 +1,22 @@
 package com.erp.patrimonio.repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
 
-public class LocalRepository {
+public interface LocalRepository {
 
-    private int proximoId = 1;
-    private final List<Local> locais;
+    void salvar(Local local);
 
-    public LocalRepository() {
-        locais = new ArrayList<>();
-    }
+    boolean atualizar(Local local);
 
-    public void salvar(Local local) {
-        if (local == null) {
-            throw new ValidacaoException("Local não pode ser nulo.");
-        }
+    boolean remover(int id);
 
-        locais.add(local);
-    }
+    Local buscarPorNome(String nome);
 
-    public boolean atualizar(Local local) {
-        if (local == null) {
-            throw new ValidacaoException("Local não pode ser nulo.");
-        }
+    Local buscarPorDescricao(String descricao);
 
-        for (int i = 0; i < locais.size(); i++) {
-            if (locais.get(i).getId() == local.getId()) {
-                locais.set(i, local);
-                return true;
-            }
-        }
-        return false;
-    }
+    Local buscarPorId(int id);
 
-    public boolean remover(int id) {
-        return locais.removeIf(local -> local.getId() == id);
-    }
-
-    public Local buscarPorNome(String nome) {
-        if (nome == null || nome.isBlank()) {
-            return null;
-        }
-
-        nome = nome.trim();
-
-        for (Local local : locais) {
-            if (local.getNome().equalsIgnoreCase(nome)) {
-                return local;
-            }
-        }
-        return null;
-    }
-
-    public Local buscarPorId(int id) {
-        for (Local local : locais) {
-            if (local.getId() == id) {
-                return local;
-            }
-        }
-        return null;
-    }
-
-    public List<Local> listarTodos() {
-        return new ArrayList<>(locais);
-    }
-
-    public int gerarProximoId() {
-        return proximoId++;
-    }
+    List<Local> listarTodos();
 }

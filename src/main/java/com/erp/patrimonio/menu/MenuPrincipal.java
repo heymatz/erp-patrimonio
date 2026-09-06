@@ -2,10 +2,12 @@ package com.erp.patrimonio.menu;
 
 import java.util.Scanner;
 
+import com.erp.patrimonio.infra.ConnectionFactory;      
 import com.erp.patrimonio.repository.CategoriaRepository;
 import com.erp.patrimonio.repository.LocalRepository;
+import com.erp.patrimonio.repository.LocalRepositoryJdbc;
 import com.erp.patrimonio.repository.PatrimonioRepository;
-import com.erp.patrimonio.repository.PatrimonioRepositoryInMemory;
+import com.erp.patrimonio.repository.PatrimonioRepositoryJdbc;
 import com.erp.patrimonio.service.CategoriaService;
 import com.erp.patrimonio.service.LocalService;
 import com.erp.patrimonio.service.PatrimonioService;
@@ -25,8 +27,8 @@ public class MenuPrincipal {
         scanner = new Scanner(System.in);
         console = new ConsoleUtils(scanner);
 
-        PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryInMemory();
-        LocalRepository localRepository = new LocalRepository();
+        PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryJdbc(new ConnectionFactory());
+        LocalRepository localRepository = new LocalRepositoryJdbc(new ConnectionFactory());
         CategoriaRepository categoriaRepository = new CategoriaRepository();
 
         PatrimonioService patrimonioService

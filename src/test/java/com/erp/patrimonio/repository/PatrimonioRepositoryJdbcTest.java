@@ -99,7 +99,7 @@ public class PatrimonioRepositoryJdbcTest {
 
         Patrimonio patrimonioAlvo = lista.get(0);
         String nomeOriginal = patrimonioAlvo.getNome();
-        String novoNome = nomeOriginal + " - ATUALIZADO";
+        String novoNome = "Notebook Teste Atualizado";
         double novoValor = 9999.99;
 
         patrimonioAlvo.setNome(novoNome);

@@ -31,9 +31,7 @@ public class LocalService {
             throw new DuplicidadeException(ERRO_LOCAL_DUPLICADO);
         }
 
-        int id = repository.gerarProximoId();
-
-        Local local = new Local(id, nome, descricao);
+        Local local = new Local(0, nome, descricao);
 
         repository.salvar(local);
 

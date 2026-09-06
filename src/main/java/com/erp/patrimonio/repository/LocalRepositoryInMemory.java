@@ -1,0 +1,94 @@
+package com.erp.patrimonio.repository;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.erp.patrimonio.exception.ValidacaoException;
+import com.erp.patrimonio.model.Local;
+
+public class LocalRepositoryInMemory implements LocalRepository {
+
+    private int proximoId = 1;
+    private final List<Local> locais;
+
+    public LocalRepositoryInMemory() {
+        locais = new ArrayList<>();
+    }
+
+    @Override
+    public void salvar(Local local) {
+        if (local == null) {
+            throw new ValidacaoException("Local não pode ser nulo.");
+        }
+        if (local.getId() == 0) {
+            local.setId(gerarProximoId());
+        }
+        locais.add(local);
+    }
+
+    public boolean atualizar(Local local) {
+        if (local == null) {
+            throw new ValidacaoException("Local não pode ser nulo.");
+        }
+
+        for (int i = 0; i < locais.size(); i++) {
+            if (locais.get(i).getId() == local.getId()) {
+                locais.set(i, local);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean remover(int id) {
+        return locais.removeIf(local -> local.getId() == id);
+    }
+
+    public Local buscarPorNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return null;
+        }
+
+        nome = nome.trim();
+
+        for (Local local : locais) {
+            if (local.getNome().equalsIgnoreCase(nome)) {
+                return local;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Local buscarPorDescricao(String descricao) {
+        if (descricao == null || descricao.isBlank()) {
+            return null;
+        }
+
+        descricao = descricao.trim();
+
+        for (Local local : locais) {
+            if (local.getDescricao().equalsIgnoreCase(descricao)) {
+                return local;
+            }
+        }
+        return null;
+    }
+
+    public Local buscarPorId(int id) {
+        for (Local local : locais) {
+            if (local.getId() == id) {
+                return local;
+            }
+        }
+        return null;
+    }
+
+    public List<Local> listarTodos() {
+        return new ArrayList<>(locais);
+    }
+
+    public int gerarProximoId() {
+        return proximoId++;
+    }
+}

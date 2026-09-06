@@ -15,7 +15,7 @@ import com.erp.patrimonio.model.Local;
 
 public class LocalRepositoryTest {
 
-    private LocalRepository localRepository;
+    private LocalRepositoryInMemory localRepository;
     private Local criarLocal() {
         return new Local(
             1,
@@ -26,7 +26,7 @@ public class LocalRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        localRepository = new LocalRepository();
+        localRepository = new LocalRepositoryInMemory();
     }
 
     @Test

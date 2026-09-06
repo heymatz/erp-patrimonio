@@ -25,14 +25,12 @@ public class PatrimonioRepositoryTest {
         Categoria categoria = new Categoria(
                 1,
                 "Eletrônicos",
-                "Equipamentos de informática"
-        );
+                "Equipamentos de informática");
 
         Local local = new Local(
                 1,
                 "Sala 101",
-                "Primeiro andar"
-        );
+                "Primeiro andar");
 
         return new Patrimonio(
                 1,
@@ -42,22 +40,19 @@ public class PatrimonioRepositoryTest {
                 local,
                 "S123456T",
                 5000.00,
-                UnidadeMedida.UNIDADE
-        );
+                UnidadeMedida.UNIDADE);
     }
 
     private Patrimonio criarPatrimonio2() {
         Categoria categoria = new Categoria(
                 2,
                 "Móveis",
-                "Mesa de Escritório"
-        );
+                "Mesa de Escritório");
 
         Local local = new Local(
                 2,
                 "Sala 201",
-                "Segundo andar"
-        );
+                "Segundo andar");
 
         return new Patrimonio(
                 2,
@@ -67,13 +62,12 @@ public class PatrimonioRepositoryTest {
                 local,
                 "S234567T",
                 2000.00,
-                UnidadeMedida.UNIDADE
-        );
+                UnidadeMedida.UNIDADE);
     }
 
     @BeforeEach
-    void setUp() {
-        patrimonioRepository = new PatrimonioRepositoryInMemory(); // Inicializa o repositório antes de cada teste
+    public void setUp() {
+        patrimonioRepository = new PatrimonioRepositoryInMemory();
     }
 
     @Test
@@ -88,8 +82,7 @@ public class PatrimonioRepositoryTest {
     void deveLancarExcecaoQuandoSalvarPatrimonioNulo() {
         assertThrows(
                 ValidacaoException.class,
-                () -> patrimonioRepository.salvar(null)
-        );
+                () -> patrimonioRepository.salvar(null));
     }
 
     @Test
@@ -104,8 +97,7 @@ public class PatrimonioRepositoryTest {
         assertTrue(atualizado);
         assertEquals(
                 "Computador atualizado",
-                patrimonioRepository.buscarPorId(1).getNome()
-        );
+                patrimonioRepository.buscarPorId(1).getNome());
     }
 
     @Test

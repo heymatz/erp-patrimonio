@@ -9,16 +9,16 @@ import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
-import com.erp.patrimonio.repository.LocalRepository;
+import com.erp.patrimonio.repository.LocalRepositoryInMemory;
 
 class LocalServiceTest {
 
-    private LocalRepository localRepository;
+    private LocalRepositoryInMemory localRepository;
     private LocalService localService;
 
     @BeforeEach
     void setUp() {
-        localRepository = new LocalRepository();
+        localRepository = new LocalRepositoryInMemory();
         localService = new LocalService(localRepository);
     }
 

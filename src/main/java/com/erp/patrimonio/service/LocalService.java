@@ -72,6 +72,8 @@ public class LocalService {
     }
 
     public List<Local> listarTodos() {
-        return repository.listarTodos();
+        List<Local> locais = repository.listarTodos();
+        // Se o banco retornar null, retornamos uma lista vazia para evitar NullPointerException
+        return locais != null ? locais : java.util.Collections.emptyList();
     }
 }

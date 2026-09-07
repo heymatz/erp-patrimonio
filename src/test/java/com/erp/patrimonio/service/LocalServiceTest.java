@@ -1,273 +1,428 @@
 package com.erp.patrimonio.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Local;
-import com.erp.patrimonio.repository.LocalRepositoryInMemory;
+import com.erp.patrimonio.repository.LocalRepository;
 
-class LocalServiceTest {
+@ExtendWith(MockitoExtension.class)
+public class LocalServiceTest {
 
-    private LocalRepositoryInMemory localRepository;
-    private LocalService localService;
+        @Mock
+        private LocalRepository repository;
 
-    @BeforeEach
-    void setUp() {
-        localRepository = new LocalRepositoryInMemory();
-        localService = new LocalService(localRepository);
-    }
+        @InjectMocks
+        private LocalService service;
 
-    @Test
-    void deveCadastrarLocalComSucesso() {
+        @Test
+        public void testCadastrarLocalComSucesso() {
+                // Arrange
+                String nome = "Armazém 01";
+                String descricao = "Local de produtos eletrônicos";
 
-        Local local = localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Ensina o Mock: simule que não existe nenhum local com esse nome no banco
+                when(repository.buscarPorNome(nome)).thenReturn(null);
 
-        assertEquals(1, local.getId());
-        assertEquals("Armazém 01", local.getNome());
-        assertEquals(
-                "Local de produtos eletrônicos",
-                local.getDescricao()
-        );
+                // Act
+                service.cadastrar(nome, descricao);
 
-        assertEquals(1, localRepository.listarTodos().size());
-    }
+                // Assert
+                // Verifica se o método salvar do repositório foi chamado exatamente 1 vez com
+                // qualquer objeto Local
+                verify(repository, times(1)).salvar(any(Local.class));
+        }
 
-    @Test
-    void naoDeveCadastrarLocalDuplicado() {
+        @Test
+        public void testCadastrarLocalComNomeDuplicado() {
+                // Arrange
+                String nome = "Armazém 01";
+                String descricao = "Local de produtos eletrônicos";
+                Local localExistente = new Local(1, nome, "Outro local");
 
-        // Arrange
-        localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Ensina o Mock: simule que esse local já existe no banco
+                when(repository.buscarPorNome(nome)).thenReturn(localExistente);
 
-        // Act + Assert
-        assertThrows(
-                DuplicidadeException.class,
-                () -> localService.cadastrar(
-                        "Armazém 01",
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(DuplicidadeException.class, () -> {
+                        service.cadastrar(nome, descricao);
+                });
+        }
 
-    @Test
-    void naoDeveCadastrarLocalComNomeMaiorQue100Caracteres() {
+        // =========================================================================
+        // TESTES PARAMETRIZADOS PARA CADASTRAR
+        // =========================================================================
 
-        String nome = "A".repeat(101);
+        @ParameterizedTest(name = "Falha ao cadastrar local com nome inválido: [{0}]")
+        @NullAndEmptySource // Passa null e ""
+        @ValueSource(strings = { " ", "   " }) // Passa strings apenas com espaços
+        public void testCadastrarLocalComNomeInvalido(String nomeInvalido) {
+                // Arrange
+                String descricao = "Local de produtos eletrônicos";
 
-        assertThrows(ValidacaoException.class,
-                () -> localService.cadastrar(
-                        nome,
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.cadastrar(nomeInvalido, descricao);
+                });
 
-    @Test
-    void naoDeveCadastrarLocalComNomeVazio() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        "",
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+                // Verifica se o repositório nunca foi chamado
+                verify(repository, never()).salvar(any(Local.class));
+        }
 
-    @Test
-    void naoDeveCadastrarLocalComNomeEmBranco() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        " ",
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+        @ParameterizedTest(name = "Falha ao cadastrar local com descrição inválida: [{0}]")
+        @NullAndEmptySource
+        @ValueSource(strings = { " ", "   " })
+        public void testCadastrarLocalComDescricaoInvalida(String descricaoInvalida) {
+                // Arrange
+                String nome = "Armazém 01";
 
-    @Test
-    void naoDeveCadastrarLocalComNomeNulo() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        null,
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.cadastrar(nome, descricaoInvalida);
+                });
 
-    @Test
-    void naoDeveCadastrarLocalComDescricaoMaiorQue255Caracteres() {
+                verify(repository, never()).salvar(any(Local.class));
+        }
 
-        String descricao = "A".repeat(256);
+        @Test
+        public void testCadastrarLocalComNomeMaiorQue100Caracteres() {
+                // Arrange
+                String nome = "A".repeat(101);
+                String descricao = "Local de produtos eletrônicos";
 
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        "Armazém 01",
-                        descricao
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.cadastrar(nome, descricao);
+                });
+        }
 
-    @Test
-    void naoDeveCadastrarLocalComDescricaoVazia() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        "Armazém 01",
-                        ""
-                )
-        );
-    }
+        @Test
+        public void testCadastrarLocalComDescricaoMaiorQue255Caracteres() {
+                // Arrange
+                String nome = "Armazém 01";
+                String descricao = "A".repeat(256);
 
-    @Test
-    void naoDeveCadastrarLocalComDescricaoEmBranco() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        "Armazém 01",
-                        " "
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.cadastrar(nome, descricao);
+                });
+        }
 
-    @Test
-    void naoDeveCadastrarLocalComDescricaoNula() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> localService.cadastrar(
-                        "Armazém 01",
-                        null
-                )
-        );
-    }
+        // =========================================================================
+        // TESTES DE BUSCAR, REMOVER E ATUALIZAR
+        // =========================================================================
 
-    @Test
-    void deveBuscarLocalPorId() {
+        @Test
+        public void testBuscarLocalPorIdComSucesso() {
+                // Arrange
+                int id = 1;
+                String nome = "Armazém 01";
+                String descricao = "Local de produtos eletrônicos";
+                Local local = new Local(id, nome, descricao);
 
-        Local local = localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Ensina o Mock: simule que esse local existe no banco
+                when(repository.buscarPorId(id)).thenReturn(local);
 
-        Local encontrada = localService.buscarPorId(local.getId());
+                // Act
+                Local encontrada = service.buscarPorId(id);
 
-        assertEquals(local.getId(), encontrada.getId());
-        assertEquals("Armazém 01", encontrada.getNome());
-        assertEquals("Local de produtos eletrônicos", encontrada.getDescricao());
-    }
+                // Assert
+                assertNotNull(encontrada);
+                assertEquals(id, encontrada.getId());
+                assertEquals(nome, encontrada.getNome());
+                assertEquals(descricao, encontrada.getDescricao());
+        }
 
-    @Test
-    void naoDeveBuscarLocalInexistente() {
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> localService.buscarPorId(999)
-        );
-    }
+        @Test
+        public void testBuscarLocalPorIdInexistente() {
+                // Arrange
+                int id = 999;
 
-    @Test
-    void deveAtualizarLocalComSucesso() {
+                // Ensina o Mock: simule que esse local não existe no banco
+                when(repository.buscarPorId(id)).thenReturn(null);
 
-        Local criada = localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Act & Assert
+                assertThrows(EntidadeNaoEncontradaException.class, () -> {
+                        service.buscarPorId(id);
+                });
+        }
 
-        Local local = localService.atualizar(
-                criada.getId(),
-                "Armazém 02",
-                "Local de peças de reposição"
-        );
+        @Test
+        public void testRemoverLocalComSucesso() {
+                // Arrange
+                int id = 1;
+                String nome = "Armazém 01";
+                String descricao = "Local de produtos eletrônicos";
+                Local local = new Local(id, nome, descricao);
 
-        assertEquals(criada.getId(), local.getId());
-        assertEquals("Armazém 02", local.getNome());
-        assertEquals(
-                "Local de peças de reposição",
-                local.getDescricao()
-        );
-    }
+                // Ensina o Mock: simule que esse local existe no banco
+                when(repository.buscarPorId(id)).thenReturn(local);
 
-    @Test
-    void naoDeveAtualizarLocalDuplicado() {
+                // Act
+                service.remover(id);
 
-        Local local1 = localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Assert
+                verify(repository, times(1)).remover(id);
+        }
 
-        Local local2 = localService.cadastrar(
-                "Armazém 02",
-                "Local de peças de reposição"
-        );
+        @Test
+        public void testRemoverLocalInexistente() {
+                // Arrange
+                int id = 999;
 
-        assertThrows(
-                DuplicidadeException.class,
-                () -> localService.atualizar(
-                        local2.getId(),
-                        "Armazém 01",
-                        "Local de produtos eletrônicos"
-                )
-        );
-    }
+                // Ensina o Mock: simule que esse local não existe no banco
+                when(repository.buscarPorId(id)).thenReturn(null);
 
-    @Test
-    void naoDeveAtualizarLocalInexistente() {
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> localService.atualizar(
-                        999,
-                        "Armazém 02",
-                        "Local de peças de reposição"
-                )
-        );
-    }
+                // Act & Assert
+                assertThrows(EntidadeNaoEncontradaException.class, () -> {
+                        service.remover(id);
+                });
 
-    @Test
-    void deveRemoverLocalComSucesso() {
-        Local local = localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Verifica se o método remover do repositório nunca foi chamado
+                verify(repository, never()).remover(id);
+        }
 
-        localService.remover(local.getId());
+        @Test
+        public void testAtualizarLocalComSucesso() {
+                // Arrange
+                int id = 1;
+                String nomeAtualizado = "Armazém 01 Atualizado";
+                String descricaoAtualizada = "Local de produtos eletrônicos atualizado";
+                Local localExistente = new Local(id, "Armazém 01", "Local de produtos eletrônicos");
 
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> localService.buscarPorId(local.getId())
-        );
+                // Ensina o Mock: os três cenários que ele vai enfrentar
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+                when(repository.buscarPorNome(nomeAtualizado)).thenReturn(null);
+                when(repository.atualizar(any(Local.class))).thenReturn(true);
 
-    }
+                // Act
+                service.atualizar(id, nomeAtualizado, descricaoAtualizada);
 
-    @Test
-    void naoDeveRemoverLocalInexistente() {
-        assertThrows(EntidadeNaoEncontradaException.class,
-                () -> localService.remover(999)
-        );
-    }
+                // Assert
+                verify(repository, times(1)).atualizar(any(Local.class));
+        }
 
-    @Test
-    void deveListarLocais() {
+        @Test
+        public void testAtualizarLocalInexistente() {
+                // Arrange
+                int id = 999;
+                String nomeAtualizado = "Armazém 01 Atualizado";
+                String descricaoAtualizada = "Local de produtos eletrônicos atualizado";
 
-        localService.cadastrar(
-                "Armazém 01",
-                "Local de produtos eletrônicos"
-        );
+                // Ensina o Mock: simule que esse local não existe no banco
+                when(repository.buscarPorId(id)).thenReturn(null);
 
-        localService.cadastrar(
-                "Armazém 02",
-                "Local de peças de reposição"
-        );
+                // Act & Assert
+                assertThrows(EntidadeNaoEncontradaException.class, () -> {
+                        service.atualizar(id, nomeAtualizado, descricaoAtualizada);
+                });
 
-        assertEquals(2, localService.listarTodos().size());
-    }
+                // Verifica se o método atualizar do repositório nunca foi chamado
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        @Test
+        public void testAtualizarLocalComNomeDuplicado() {
+                // Arrange
+                int id = 1;
+                String nomeAtualizado = "Armazém 02"; // Nome duplicado
+                String descricaoAtualizada = "Local de produtos eletrônicos atualizado";
+                Local localExistente = new Local(id, "Armazém 01", "Local de produtos eletrônicos");
+                Local localDuplicado = new Local(2, nomeAtualizado, "Outro local");
+
+                // Ensina o Mock: simule que esse local existe no banco
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+                when(repository.buscarPorNome(nomeAtualizado)).thenReturn(localDuplicado);
+
+                // Act & Assert
+                assertThrows(DuplicidadeException.class, () -> {
+                        service.atualizar(id, nomeAtualizado, descricaoAtualizada);
+                });
+
+                // Verifica se o método atualizar do repositório nunca foi chamado
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        @Test
+        public void testAtualizarLocalMantendoMesmoNomeComSucesso() {
+                // Arrange
+                int id = 1;
+                String nome = "Armazém 01";
+                String novaDescricao = "Descrição alterada, nome mantido";
+                Local localExistente = new Local(id, nome, "Descrição antiga");
+
+                // Ensina o Mock: Busca por ID acha o local. Busca por nome acha o mesmo local.
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+                when(repository.buscarPorNome(nome)).thenReturn(localExistente);
+                when(repository.atualizar(any(Local.class))).thenReturn(true);
+
+                // Act
+                service.atualizar(id, nome, novaDescricao);
+
+                // Assert
+                verify(repository, times(1)).atualizar(any(Local.class));
+        }
+
+        @Test
+        public void testAtualizarLocalFalhandoNoBancoDeDados() {
+                // Arrange
+                int id = 1;
+                Local localExistente = new Local(id, "Armazém 01", "Desc");
+
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+                when(repository.buscarPorNome("Armazém 01")).thenReturn(null);
+                
+                // Ensina o Mock: Simula que o comando UPDATE falhou lá no MySQL e retornou FALSE
+                when(repository.atualizar(any(Local.class))).thenReturn(false);
+
+                // Act & Assert
+                // Como retornou false, a regra de negócio precisa lançar a EstadoInvalidoException
+                assertThrows(com.erp.patrimonio.exception.EstadoInvalidoException.class, () -> {
+                        service.atualizar(id, "Armazém 01", "Nova desc");
+                });
+        }
+
+        @Test
+        public void testAtualizarLocalComNomeMaiorQue100Caracteres() {
+                // Arrange
+                int id = 1;
+                Local localExistente = new Local(id, "Armazém 01", "Desc");
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+
+                String nomeGigante = "A".repeat(101);
+
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.atualizar(id, nomeGigante, "Nova Desc");
+                });
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        @Test
+        public void testAtualizarLocalComDescricaoMaiorQue255Caracteres() {
+                // Arrange
+                int id = 1;
+                Local localExistente = new Local(id, "Armazém 01", "Desc");
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+
+                String descricaoGigante = "A".repeat(256);
+
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.atualizar(id, "Nome Válido", descricaoGigante);
+                });
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        // =========================================================================
+        // TESTES PARAMETRIZADOS PARA ATUALIZAR
+        // =========================================================================
+
+        @ParameterizedTest(name = "Falha ao atualizar local com nome inválido: [{0}]")
+        @NullAndEmptySource
+        @ValueSource(strings = { " ", "   " })
+        public void testAtualizarLocalComNomeInvalido(String nomeAtualizado) {
+                // Arrange
+                int id = 1;
+                String descricaoAtualizada = "Local de produtos eletrônicos atualizado";
+                Local localExistente = new Local(id, "Armazém 01", "Local de produtos eletrônicos");
+
+                // Ensina o Mock: simule que esse local existe no banco
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.atualizar(id, nomeAtualizado, descricaoAtualizada);
+                });
+
+                // Verifica se o método atualizar do repositório nunca foi chamado
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        @ParameterizedTest(name = "Falha ao atualizar local com descrição inválida: [{0}]")
+        @NullAndEmptySource
+        @ValueSource(strings = { " ", "   " })
+        public void testAtualizarLocalComDescricaoInvalida(String descricaoAtualizada) {
+                // Arrange
+                int id = 1;
+                String nomeAtualizado = "Armazém 01 Atualizado";
+                Local localExistente = new Local(id, "Armazém 01", "Local de produtos eletrônicos");
+
+                // Ensina o Mock: simule que esse local existe no banco
+                when(repository.buscarPorId(id)).thenReturn(localExistente);
+
+                // Act & Assert
+                assertThrows(ValidacaoException.class, () -> {
+                        service.atualizar(id, nomeAtualizado, descricaoAtualizada);
+                });
+
+                // Verifica se o método atualizar do repositório nunca foi chamado
+                verify(repository, never()).atualizar(any(Local.class));
+        }
+
+        // =========================================================================
+        // TESTES DE LISTAGEM
+        // =========================================================================
+
+        @Test
+        public void testListarTodosLocais() {
+                // Arrange
+                Local local1 = new Local(1, "Armazém 01", "Local de produtos eletrônicos");
+                Local local2 = new Local(2, "Armazém 02", "Local de peças de reposição");
+
+                // Ensina o Mock: simule que existem dois locais no banco
+                when(repository.listarTodos()).thenReturn(java.util.Arrays.asList(local1, local2));
+
+                // Act
+                java.util.List<Local> locais = service.listarTodos();
+
+                // Assert
+                assertNotNull(locais);
+                assertEquals(2, locais.size());
+        }
+
+        @Test
+        public void testListarTodosLocaisVazio() {
+                // Arrange
+                // Ensina o Mock: simule que não existem locais no banco
+                when(repository.listarTodos()).thenReturn(java.util.Collections.emptyList());
+
+                // Act
+                java.util.List<Local> locais = service.listarTodos();
+
+                // Assert
+                assertNotNull(locais);
+                assertEquals(0, locais.size());
+        }
+
+        @Test
+        public void testListarTodosLocaisNulo() {
+                // Arrange
+                // Ensina o Mock: simule que o repositório retorna null
+                when(repository.listarTodos()).thenReturn(null);
+
+                // Act
+                java.util.List<Local> locais = service.listarTodos();
+
+                // Assert
+                assertNotNull(locais);
+                assertEquals(0, locais.size());
+        }
 }

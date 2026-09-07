@@ -23,6 +23,13 @@
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Mockito JUnit 5 Integration -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- MySQL Connector/J para conexão com o banco de dados MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -40,6 +47,13 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
+        </dependency>
+        <!-- Mockito para Mocks em Testes Unitários -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

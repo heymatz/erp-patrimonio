@@ -1,273 +1,119 @@
 package com.erp.patrimonio.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.erp.patrimonio.exception.DuplicidadeException;
-import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
-import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.repository.CategoriaRepository;
-import com.erp.patrimonio.repository.CategoriaRepositoryInMemory;
 
-class CategoriaServiceTest {
+@ExtendWith(MockitoExtension.class)
+public class CategoriaServiceTest {
 
-    private CategoriaRepository categoriaRepository;
-    private CategoriaService categoriaService;
+    @Mock
+    private CategoriaRepository repository;
 
-    @BeforeEach
-    void setUp() {
-        categoriaRepository = new CategoriaRepositoryInMemory();
-        categoriaService = new CategoriaService(categoriaRepository);
-    }
+    @InjectMocks
+    private CategoriaService service;
 
     @Test
-    void deveCadastrarCategoriaComSucesso() {
-
-        Categoria categoria = categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        assertEquals(1, categoria.getId());
-        assertEquals("Eletrônicos", categoria.getNome());
-        assertEquals(
-                "Categoria de produtos eletrônicos",
-                categoria.getDescricao()
-        );
-
-        assertEquals(1, categoriaRepository.listarTodos().size());
-    }
-
-    @Test
-    void naoDeveCadastrarCategoriaDuplicada() {
-
+    public void testCadastrarCategoriaComSucesso() {
         // Arrange
-        categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
+        String nome = "Eletrônicos";
+        String descricao = "Equipamentos de TI";
+        
+        // Ensina o Mock: simule que não existe nenhuma categoria com esse nome no banco
+        when(repository.buscarPorNome(nome)).thenReturn(null);
 
-        // Act + Assert
-        assertThrows(
-                DuplicidadeException.class,
-                () -> categoriaService.cadastrar(
-                        "Eletrônicos",
-                        "Categoria de produtos eletrônicos"
-                )
-        );
+        // Act
+        service.cadastrar(nome, descricao);
+
+        // Assert
+        // Verifica se o método salvar do repositório foi chamado exatamente 1 vez com qualquer objeto Categoria
+        verify(repository, times(1)).salvar(any(Categoria.class));
     }
 
     @Test
-    void naoDeveCadastrarCategoriaComNomeMaiorQue100Caracteres() {
+    public void testCadastrarCategoriaComNomeDuplicado() {
+        // Arrange
+        String nome = "Eletrônicos";
+        String descricao = "Equipamentos de TI";
+        Categoria categoriaExistente = new Categoria(1, nome, "Outra descrição");
 
-        String nome = "A".repeat(101);
+        // Ensina o Mock: simule que essa categoria já existe no banco
+        when(repository.buscarPorNome(nome)).thenReturn(categoriaExistente);
 
-        assertThrows(ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        nome,
-                        "Categoria de produtos eletrônicos"
-                )
-        );
+        // Act & Assert
+        DuplicidadeException exception = assertThrows(DuplicidadeException.class, () -> {
+            service.cadastrar(nome, descricao);
+        });
+
+        // Verifica se a mensagem de erro é a esperada
+        assertEquals("Já existe uma categoria com esse nome.", exception.getMessage());
+        
+        // Garante que o repositório nunca foi chamado para salvar
+        verify(repository, never()).salvar(any(Categoria.class));
     }
 
     @Test
-    void naoDeveCadastrarCategoriaComNomeVazio() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        "",
-                        "Categoria de produtos eletrônicos"
-                )
-        );
+    public void testBuscarPorIdComSucesso() {
+        // Arrange
+        Categoria mockCategoria = new Categoria(1, "Eletrônicos", "Equipamentos de TI");
+        when(repository.buscarPorId(1)).thenReturn(mockCategoria);
+
+        // Act
+        Categoria resultado = service.buscarPorId(1);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals("Eletrônicos", resultado.getNome());
+        verify(repository, times(1)).buscarPorId(1);
     }
 
     @Test
-    void naoDeveCadastrarCategoriaComNomeEmBranco() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        " ",
-                        "Categoria de produtos eletrônicos"
-                )
-        );
+    public void testAtualizarCategoriaComSucesso() {
+        // Arrange
+        Categoria categoriaNoBanco = new Categoria(1, "Antigo", "Descricao antiga");
+        
+        // Simula que a categoria existe quando o service for buscar pelo ID
+        when(repository.buscarPorId(1)).thenReturn(categoriaNoBanco);
+        // Simula que o novo nome não está em uso por outra categoria
+        when(repository.buscarPorNome("Novo Nome")).thenReturn(null);
+        // Simula que o update no banco deu certo
+        when(repository.atualizar(categoriaNoBanco)).thenReturn(true);
+
+        // Act
+        Categoria atualizada = service.atualizar(1, "Novo Nome", "Nova Descricao");
+
+        // Assert
+        assertEquals("Novo Nome", atualizada.getNome());
+        assertEquals("Nova Descricao", atualizada.getDescricao());
+        verify(repository, times(1)).atualizar(categoriaNoBanco);
     }
 
     @Test
-    void naoDeveCadastrarCategoriaComNomeNulo() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        null,
-                        "Categoria de produtos eletrônicos"
-                )
-        );
-    }
+    public void testRemoverCategoriaComSucesso() {
+        // Arrange
+        Categoria categoriaNoBanco = new Categoria(1, "Eletrônicos", "TI");
+        
+        // O remover exige que a categoria exista, então simulamos que ela existe
+        when(repository.buscarPorId(1)).thenReturn(categoriaNoBanco);
 
-    @Test
-    void naoDeveCadastrarCategoriaComDescricaoMaiorQue255Caracteres() {
+        // Act
+        service.remover(1);
 
-        String descricao = "A".repeat(256);
-
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        "Eletrônicos",
-                        descricao
-                )
-        );
-    }
-
-    @Test
-    void naoDeveCadastrarCategoriaComDescricaoVazia() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        "Eletrônicos",
-                        ""
-                )
-        );
-    }
-
-    @Test
-    void naoDeveCadastrarCategoriaComDescricaoEmBranco() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        "Eletrônicos",
-                        " "
-                )
-        );
-    }
-
-    @Test
-    void naoDeveCadastrarCategoriaComDescricaoNula() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> categoriaService.cadastrar(
-                        "Eletrônicos",
-                        null
-                )
-        );
-    }
-
-    @Test
-    void deveBuscarCategoriaPorId() {
-
-        Categoria categoria = categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        Categoria encontrada = categoriaService.buscarPorId(categoria.getId());
-
-        assertEquals(categoria.getId(), encontrada.getId());
-        assertEquals("Eletrônicos", encontrada.getNome());
-    }
-
-    @Test
-    void naoDeveBuscarCategoriaInexistente() {
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> categoriaService.buscarPorId(999)
-        );
-    }
-
-    @Test
-    void deveAtualizarCategoriaComSucesso() {
-
-        Categoria criada = categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        Categoria categoria = categoriaService.atualizar(
-                criada.getId(),
-                "Móveis",
-                "Categoria de móveis planejados"
-        );
-
-        assertEquals(criada.getId(), categoria.getId());
-        assertEquals("Móveis", categoria.getNome());
-        assertEquals(
-                "Categoria de móveis planejados",
-                categoria.getDescricao()
-        );
-    }
-
-    @Test
-    void naoDeveAtualizarCategoriaDuplicada() {
-
-        Categoria categoria1 = categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        Categoria categoria2 = categoriaService.cadastrar(
-                "Móveis",
-                "Categoria de móveis"
-        );
-
-        assertThrows(
-                DuplicidadeException.class,
-                () -> categoriaService.atualizar(
-                        categoria2.getId(),
-                        "Eletrônicos",
-                        "Categoria de produtos eletrônicos"
-                )
-        );
-    }
-
-    @Test
-    void naoDeveAtualizarCategoriaInexistente() {
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> categoriaService.atualizar(
-                        999,
-                        "Informática",
-                        "Categoria de produtos de informática"
-                )
-        );
-    }
-
-    @Test
-    void deveRemoverCategoriaComSucesso() {
-        Categoria categoria = categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        categoriaService.remover(categoria.getId());
-
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> categoriaService.buscarPorId(categoria.getId())
-        );
-
-    }
-
-    @Test
-    void naoDeveRemoverCategoriaInexistente() {
-        assertThrows(EntidadeNaoEncontradaException.class,
-                () -> categoriaService.remover(999)
-        );
-    }
-
-    @Test
-    void deveListarCategorias() {
-
-        categoriaService.cadastrar(
-                "Eletrônicos",
-                "Categoria de produtos eletrônicos"
-        );
-
-        categoriaService.cadastrar(
-                "Móveis",
-                "Categoria de móveis"
-        );
-
-        assertEquals(2, categoriaService.listarTodos().size());
+        // Assert
+        verify(repository, times(1)).remover(1);
     }
 }

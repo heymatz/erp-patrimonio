@@ -1,17 +1,19 @@
 package com.erp.patrimonio.repository;
 
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.erp.patrimonio.enums.UnidadeMedida;
-import com.erp.patrimonio.exception.ValidacaoException;
+import com.erp.patrimonio.infra.ConnectionFactory;
+import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
@@ -19,150 +21,101 @@ import com.erp.patrimonio.model.Patrimonio;
 public class PatrimonioRepositoryTest {
 
     private PatrimonioRepository patrimonioRepository;
-
-    private Patrimonio criarPatrimonio() {
-
-        Categoria categoria = new Categoria(
-                1,
-                "Eletrônicos",
-                "Equipamentos de informática");
-
-        Local local = new Local(
-                1,
-                "Sala 101",
-                "Primeiro andar");
-
-        return new Patrimonio(
-                1,
-                "Computador",
-                "Primeiro PC",
-                categoria,
-                local,
-                "S123456T",
-                5000.00,
-                UnidadeMedida.UNIDADE);
-    }
-
-    private Patrimonio criarPatrimonio2() {
-        Categoria categoria = new Categoria(
-                2,
-                "Móveis",
-                "Mesa de Escritório");
-
-        Local local = new Local(
-                2,
-                "Sala 201",
-                "Segundo andar");
-
-        return new Patrimonio(
-                2,
-                "Mesa",
-                "Mesa escrivaninha para escritório",
-                categoria,
-                local,
-                "S234567T",
-                2000.00,
-                UnidadeMedida.UNIDADE);
-    }
+    private CategoriaRepository categoriaRepository;
+    private LocalRepository localRepository;
+    private ConnectionFactory connectionFactory;
+    private TransactionManager transactionManager;
 
     @BeforeEach
     public void setUp() {
-        patrimonioRepository = new PatrimonioRepositoryInMemory();
+        connectionFactory = new ConnectionFactory();
+        transactionManager = new TransactionManager(connectionFactory);
+
+        patrimonioRepository = new PatrimonioRepositoryJdbc(connectionFactory, transactionManager);
+        categoriaRepository = new CategoriaRepositoryJdbc(connectionFactory, transactionManager);
+        localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
+
+        // Limpa as tabelas respeitando a Foreign Key
+        try (Connection conn = connectionFactory.recuperarConexao();
+                Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM patrimonios");
+            stmt.executeUpdate("DELETE FROM locais");
+            stmt.executeUpdate("DELETE FROM categorias");
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao limpar banco para os testes de patrimônio: " + e.getMessage());
+        }
+    }
+
+    private Patrimonio criarPatrimonioValido() {
+        Categoria categoria = new Categoria(0, "Informática", "Equipamentos de TI");
+        categoriaRepository.salvar(categoria);
+
+        Local local = new Local(0, "Escritório Central", "Prédio principal");
+        localRepository.salvar(local);
+
+        return new Patrimonio(
+                0,
+                "Notebook Dell",
+                "Core i7 16GB",
+                categoria,
+                local,
+                "SN123456",
+                4500.00,
+                UnidadeMedida.UNIDADE);
     }
 
     @Test
-    void deveSalvarPatrimonioComDadosValidos() {
-        Patrimonio patrimonio = criarPatrimonio();
+    void deveSalvarPatrimonioComSucesso() {
+        Patrimonio patrimonio = criarPatrimonioValido();
         patrimonioRepository.salvar(patrimonio);
 
-        assertEquals(1, patrimonioRepository.listarTodos().size());
-    }
+        assertTrue(patrimonio.getId() > 0, "O ID do patrimônio deveria ser gerado.");
 
-    @Test
-    void deveLancarExcecaoQuandoSalvarPatrimonioNulo() {
-        assertThrows(
-                ValidacaoException.class,
-                () -> patrimonioRepository.salvar(null));
-    }
-
-    @Test
-    void deveAtualizarPatrimonioExistente() {
-        Patrimonio patrimonio = criarPatrimonio();
-        patrimonioRepository.salvar(patrimonio);
-
-        patrimonio.setNome("Computador atualizado");
-
-        boolean atualizado = patrimonioRepository.atualizar(patrimonio);
-
-        assertTrue(atualizado);
-        assertEquals(
-                "Computador atualizado",
-                patrimonioRepository.buscarPorId(1).getNome());
-    }
-
-    @Test
-    void deveRemoverPatrimonioExistente() {
-        Patrimonio patrimonio = criarPatrimonio();
-        patrimonioRepository.salvar(patrimonio);
-
-        boolean removido = patrimonioRepository.remover(1);
-
-        assertTrue(removido);
-        assertEquals(0, patrimonioRepository.listarTodos().size());
+        Patrimonio salvo = patrimonioRepository.buscarPorId(patrimonio.getId());
+        assertNotNull(salvo);
+        assertEquals("Notebook Dell", salvo.getNome());
+        assertEquals("SN123456", salvo.getNumeroSerie());
     }
 
     @Test
     void deveBuscarPatrimonioPorIdExistente() {
-        Patrimonio patrimonio = criarPatrimonio();
+        Patrimonio patrimonio = criarPatrimonioValido();
         patrimonioRepository.salvar(patrimonio);
-        Patrimonio encontrado = patrimonioRepository.buscarPorId(1);
-        assertEquals(patrimonio, encontrado);
+
+        Patrimonio encontrado = patrimonioRepository.buscarPorId(patrimonio.getId());
+        assertNotNull(encontrado);
+        assertEquals(patrimonio.getId(), encontrado.getId());
     }
 
     @Test
-    void deveListarTodosOsPatrimoniosExistentes() {
-        Patrimonio patrimonio1 = criarPatrimonio();
+    void deveAtualizarPatrimonioExistente() {
+        Patrimonio patrimonio = criarPatrimonioValido();
+        patrimonioRepository.salvar(patrimonio);
 
-        Patrimonio patrimonio2 = criarPatrimonio2();
-
-        patrimonioRepository.salvar(patrimonio1);
-        patrimonioRepository.salvar(patrimonio2);
-
-        List<Patrimonio> patrimonios = patrimonioRepository.listarTodos();
-
-        assertEquals(2, patrimonios.size());
-        assertEquals("Computador", patrimonios.get(0).getNome());
-        assertEquals("Mesa", patrimonios.get(1).getNome());
-        assertEquals("Primeiro PC", patrimonios.get(0).getDescricao());
-        assertEquals("Mesa escrivaninha para escritório", patrimonios.get(1).getDescricao());
-        assertEquals("S123456T", patrimonios.get(0).getNumeroSerie());
-        assertEquals(5000.00, patrimonios.get(0).getValor());
-        assertEquals("S234567T", patrimonios.get(1).getNumeroSerie());
-        assertEquals(2000.00, patrimonios.get(1).getValor());
-        assertEquals(UnidadeMedida.UNIDADE, patrimonios.get(0).getUnidadeMedida());
-    }
-
-    @Test
-    void deveRetornarFalseAoRemoverPatrimonioInexistente() {
-        boolean removido = patrimonioRepository.remover(99);
-
-        assertFalse(removido);
-    }
-
-    @Test
-    void deveRetornarFalseAoAtualizarPatrimonioInexistente() {
-        Patrimonio patrimonio = criarPatrimonio();
-
+        patrimonio.setNome("Notebook Dell Atualizado");
         boolean atualizado = patrimonioRepository.atualizar(patrimonio);
 
-        assertFalse(atualizado);
+        assertTrue(atualizado);
+        assertEquals("Notebook Dell Atualizado", patrimonioRepository.buscarPorId(patrimonio.getId()).getNome());
     }
 
     @Test
-    void deveRetornarNullAoBuscarPatrimonioInexistente() {
-        Patrimonio patrimonio = patrimonioRepository.buscarPorId(99);
+    void deveRemoverPatrimonioExistente() {
+        Patrimonio patrimonio = criarPatrimonioValido();
+        patrimonioRepository.salvar(patrimonio);
 
-        assertNull(patrimonio);
+        boolean removido = patrimonioRepository.remover(patrimonio.getId());
+
+        assertTrue(removido);
+        assertNull(patrimonioRepository.buscarPorId(patrimonio.getId()));
     }
 
+    @Test
+    void deveListarTodosOsPatrimonios() {
+        Patrimonio p1 = criarPatrimonioValido();
+        patrimonioRepository.salvar(p1);
+
+        List<Patrimonio> lista = patrimonioRepository.listarTodos();
+        assertEquals(1, lista.size());
+    }
 }

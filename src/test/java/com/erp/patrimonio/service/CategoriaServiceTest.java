@@ -10,6 +10,7 @@ import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.repository.CategoriaRepository;
+import com.erp.patrimonio.repository.CategoriaRepositoryInMemory;
 
 class CategoriaServiceTest {
 
@@ -18,7 +19,7 @@ class CategoriaServiceTest {
 
     @BeforeEach
     void setUp() {
-        categoriaRepository = new CategoriaRepository();
+        categoriaRepository = new CategoriaRepositoryInMemory();
         categoriaService = new CategoriaService(categoriaRepository);
     }
 

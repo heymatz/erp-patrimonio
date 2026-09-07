@@ -7,7 +7,7 @@ public class Categoria {
     private static final int MAX_NOME = 100;
     private static final int MAX_DESCRICAO = 255;
 
-    private final int id; // O ID não muda depois de cadastrado
+    private int id;
     private String nome;
     private String descricao;
 
@@ -19,6 +19,10 @@ public class Categoria {
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNome() {
@@ -34,12 +38,11 @@ public class Categoria {
             throw new ValidacaoException("O nome é obrigatório.");
         }
 
-        nome = nome.trim(); 
+        nome = nome.trim();
 
         if (nome.length() > MAX_NOME) {
             throw new ValidacaoException(
-                    "O nome deve ter no máximo " + MAX_NOME + " caracteres."
-            );
+                    "O nome deve ter no máximo " + MAX_NOME + " caracteres.");
         }
 
         this.nome = nome;
@@ -54,8 +57,7 @@ public class Categoria {
 
         if (descricao.length() > MAX_DESCRICAO) {
             throw new ValidacaoException(
-                    "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres."
-            );
+                    "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres.");
         }
 
         this.descricao = descricao;

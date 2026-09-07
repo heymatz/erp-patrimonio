@@ -31,9 +31,7 @@ public class CategoriaService {
             throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
         }
 
-        int id = repository.gerarProximoId();
-
-        Categoria categoria = new Categoria(id, nome, descricao);
+        Categoria categoria = new Categoria(0, nome, descricao);
 
         repository.salvar(categoria);
 

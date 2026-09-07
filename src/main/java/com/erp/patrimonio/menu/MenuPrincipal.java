@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import com.erp.patrimonio.infra.ConnectionFactory;      
 import com.erp.patrimonio.repository.CategoriaRepository;
+import com.erp.patrimonio.repository.CategoriaRepositoryJdbc;
 import com.erp.patrimonio.repository.LocalRepository;
 import com.erp.patrimonio.repository.LocalRepositoryJdbc;
 import com.erp.patrimonio.repository.PatrimonioRepository;
@@ -29,7 +30,7 @@ public class MenuPrincipal {
 
         PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryJdbc(new ConnectionFactory());
         LocalRepository localRepository = new LocalRepositoryJdbc(new ConnectionFactory());
-        CategoriaRepository categoriaRepository = new CategoriaRepository();
+        CategoriaRepository categoriaRepository = new CategoriaRepositoryJdbc(new ConnectionFactory());
 
         PatrimonioService patrimonioService
                 = new PatrimonioService(patrimonioRepository);

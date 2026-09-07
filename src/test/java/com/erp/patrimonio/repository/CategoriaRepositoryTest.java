@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.erp.patrimonio.exception.ValidacaoException;
-import com.erp.patrimonio.model.Categoria;
+import com.erp.patrimonio.model.Categoria;;
 
 public class CategoriaRepositoryTest {
 
@@ -27,7 +27,7 @@ public class CategoriaRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        categoriaRepository = new CategoriaRepository();
+        categoriaRepository = new CategoriaRepositoryInMemory();
     }
 
     @Test

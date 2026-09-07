@@ -2,7 +2,8 @@ package com.erp.patrimonio.menu;
 
 import java.util.Scanner;
 
-import com.erp.patrimonio.infra.ConnectionFactory;      
+import com.erp.patrimonio.infra.ConnectionFactory;
+import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.repository.CategoriaRepository;
 import com.erp.patrimonio.repository.CategoriaRepositoryJdbc;
 import com.erp.patrimonio.repository.LocalRepository;
@@ -24,39 +25,28 @@ public class MenuPrincipal {
     private final CategoriaMenu categoriaMenu;
 
     public MenuPrincipal() {
-
         scanner = new Scanner(System.in);
         console = new ConsoleUtils(scanner);
 
-        PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryJdbc(new ConnectionFactory());
-        LocalRepository localRepository = new LocalRepositoryJdbc(new ConnectionFactory());
-        CategoriaRepository categoriaRepository = new CategoriaRepositoryJdbc(new ConnectionFactory());
+        // 1. Instancia a infraestrutura base de conexões e transações
+        ConnectionFactory connectionFactory = new ConnectionFactory();
+        TransactionManager transactionManager = new TransactionManager(connectionFactory);
 
-        PatrimonioService patrimonioService
-                = new PatrimonioService(patrimonioRepository);
+        // 2. Instancia os repositórios injetando a factory e o transactionManager
+        PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryJdbc(connectionFactory, transactionManager);
+        LocalRepository localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
+        CategoriaRepository categoriaRepository = new CategoriaRepositoryJdbc(connectionFactory, transactionManager);
 
-        LocalService localService
-                = new LocalService(localRepository);
+        // 3. Instancia os serviços
+        PatrimonioService patrimonioService = new PatrimonioService(patrimonioRepository);
+        LocalService localService = new LocalService(localRepository);
+        CategoriaService categoriaService = new CategoriaService(categoriaRepository);
 
-        CategoriaService categoriaService
-                = new CategoriaService(categoriaRepository);
+        // 4. Instancia os menus
+        patrimonioMenu = new PatrimonioMenu(console, patrimonioService, categoriaService, localService);
+        localMenu = new LocalMenu(console, localService);
+        categoriaMenu = new CategoriaMenu(console, categoriaService);
 
-        patrimonioMenu = new PatrimonioMenu(
-                console,
-                patrimonioService,
-                categoriaService,
-                localService
-        );
-
-        localMenu = new LocalMenu(
-                console,
-                localService
-        );
-
-        categoriaMenu = new CategoriaMenu(
-                console,
-                categoriaService
-        );
     }
 
     public void executar() {
@@ -72,20 +62,11 @@ public class MenuPrincipal {
             opcao = console.lerInteiro("Escolha uma opção: ");
 
             switch (opcao) {
-                case 1 ->
-                    patrimonioMenu.executar();
-
-                case 2 ->
-                    localMenu.executar();
-
-                case 3 ->
-                    categoriaMenu.executar();
-
-                case 0 ->
-                    System.out.println("Sistema encerrado.");
-
-                default ->
-                    System.out.println("Opção inválida.");
+                case 1 -> patrimonioMenu.executar();
+                case 2 -> localMenu.executar();
+                case 3 -> categoriaMenu.executar();
+                case 0 -> System.out.println("Sistema encerrado.");
+                default -> System.out.println("Opção inválida.");
             }
         } while (opcao != 0);
     }

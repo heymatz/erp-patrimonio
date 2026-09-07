@@ -3,21 +3,46 @@ package com.erp.patrimonio.repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.erp.patrimonio.exception.EstadoInvalidoException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.infra.ConnectionFactory;
+import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.model.Local;
 
 public class LocalRepositoryJdbc implements LocalRepository {
 
-    private final ConnectionFactory factory;
+    private final ConnectionFactory connectionFactory;
+    private final TransactionManager transactionManager;
 
-    public LocalRepositoryJdbc(ConnectionFactory factory) {
-        this.factory = factory;
+    // Construtor atualizado para receber a Factory e o TransactionManager
+    public LocalRepositoryJdbc(ConnectionFactory connectionFactory, TransactionManager transactionManager) {
+        this.connectionFactory = connectionFactory;
+        this.transactionManager = transactionManager;
+    }
+
+    // ===================================================================================
+    // MÉTODO CHAVE: Gerenciamento inteligente de conexão (Transacional ou Isolada)
+    // ===================================================================================
+    private Connection obterConexao() throws Exception {
+        Connection conexaoTransacao = transactionManager.getCurrentConnection();
+        if (conexaoTransacao != null) {
+            return conexaoTransacao; // Usa a conexão da transação (NÃO FECHAR)
+        }
+        return connectionFactory.recuperarConexao(); // Abre uma nova conexão (DEVE FECHAR)
+    }
+
+    private void fecharConexaoSeNecessario(Connection conn) {
+        try {
+            if (conn != null && transactionManager.getCurrentConnection() != conn) {
+                conn.close();
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao fechar conexão: " + e.getMessage());
+        }
     }
 
     @Override
@@ -26,170 +51,246 @@ public class LocalRepositoryJdbc implements LocalRepository {
             throw new ValidacaoException("Local não pode ser nulo.");
         }
 
-        String sql = "INSERT INTO local (nome, descricao) VALUES (?, ?)";
+        String sql = "INSERT INTO locais (nome, descricao) VALUES (?, ?)";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-        try (Connection conn = factory.recuperarConexao();
-                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, local.getNome());
             stmt.setString(2, local.getDescricao());
-            stmt.executeUpdate();
 
-            try (ResultSet chavesGeradas = stmt.getGeneratedKeys()) {
-                if (chavesGeradas.next()) {
-                    local.setId(chavesGeradas.getInt(1));
-                }
+            stmt.executeUpdate();
+            rs = stmt.getGeneratedKeys();
+
+            if (rs.next()) {
+                local.setId(rs.getInt(1));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao salvar o local no banco de dados.", e);
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao salvar local no banco MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
     }
 
     @Override
     public boolean atualizar(Local local) {
-        String sql = "UPDATE local SET nome = ?, descricao = ? WHERE id = ?";
+        if (local == null) {
+            throw new ValidacaoException("Local não pode ser nulo.");
+        }
 
-        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql = "UPDATE locais SET nome = ?, descricao = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
 
-            // Valida o ID do local antes de atualizar
-            if (local.getId() <= 0) {
-                throw new ValidacaoException("ID do local inválido para atualização.");
-            }
-
-            // Injeta os dados do local nos "setters"
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
             stmt.setString(1, local.getNome());
             stmt.setString(2, local.getDescricao());
-            stmt.setInt(3, local.getId()); // Onde id = ?
+            stmt.setInt(3, local.getId());
 
-            // Executa o comando e retorna true se alguma linha foi alterada
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar o local no banco de dados.", e);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao atualizar local no banco MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
     }
 
     @Override
     public boolean remover(int id) {
-        String sql = "DELETE FROM local WHERE id = ?";
+        String sql = "DELETE FROM locais WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
 
-        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            // Valida o ID do local antes de remover
-            if (id <= 0) {
-                throw new ValidacaoException("ID do local inválido para remoção.");
-            }
-
-            // Injeta o ID do local no "setter"
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
             stmt.setInt(1, id);
 
-            // Executa o comando e retorna true se alguma linha foi removida
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao remover o local no banco de dados.", e);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao remover local no banco MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
     }
 
     @Override
-    public Local buscarPorNome(String nome) {
-        String sql = "SELECT id, nome, descricao FROM local WHERE nome = ?";
+    public Local buscarPorId(int id) {
+        String sql = "SELECT id, nome, descricao FROM locais WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
 
-            stmt.setString(1, nome.trim());
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                // O 'if' garante que puxe apenas 1 registro (assumindo que o nome do local não
-                // se repete)
-                if (rs.next()) {
-                    return new Local(
-                            rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("descricao"));
-                }
+            if (rs.next()) {
+                return new Local(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getString("descricao"));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar o local por nome no banco de dados.", e);
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao buscar local por ID no MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
+        return null;
+    }
 
-        // Retorno padrão caso não encontre nada no banco
+    @Override
+    public Local buscarPorNome(String nome) {
+        if (nome == null || nome.isBlank())
+            return null;
+
+        String sql = "SELECT id, nome, descricao FROM locais WHERE nome = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, nome.trim());
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Local(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getString("descricao"));
+            }
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao buscar local por nome no MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
+        }
         return null;
     }
 
     @Override
     public Local buscarPorDescricao(String descricao) {
-        String sql = "SELECT id, nome, descricao FROM local WHERE descricao = ?";
-
-        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, descricao.trim());
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                // O 'if' garante que puxe apenas 1 registro (assumindo que a descrição do local
-                // não se repete)
-                if (rs.next()) {
-                    return new Local(
-                            rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("descricao"));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar o local por descricao no banco de dados.", e);
-        }
-
-        // Retorno padrão caso não encontre nada no banco
-        return null;
-    }
-
-    @Override
-    public Local buscarPorId(int id) {
-        String sql = "SELECT id, nome, descricao FROM local WHERE id = ?";
-
-        if (id <= 0) {
+        if (descricao == null || descricao.isBlank()) {
             return null;
         }
 
-        try (Connection conn = factory.recuperarConexao(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql = "SELECT id, nome, descricao FROM locais WHERE descricao = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-            stmt.setInt(1, id);
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, descricao.trim());
+            rs = stmt.executeQuery();
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Local(
-                            rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("descricao"));
-                }
+            if (rs.next()) {
+                return new Local(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getString("descricao"));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar o local por ID no banco de dados.", e);
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao buscar local por descrição no MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
         return null;
     }
 
     @Override
     public List<Local> listarTodos() {
-        String sql = "SELECT id, nome, descricao FROM local";
-        try (Connection conn = factory.recuperarConexao();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        List<Local> locais = new ArrayList<>();
+        String sql = "SELECT id, nome, descricao FROM locais";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-            List<Local> locais = new ArrayList<>();
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
             while (rs.next()) {
-                Local local = new Local(
+                locais.add(new Local(
                         rs.getInt("id"),
                         rs.getString("nome"),
-                        rs.getString("descricao"));
-                locais.add(local);
+                        rs.getString("descricao")));
             }
-            return locais; // Se der sucesso, sai por aqui
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao listar todos os locais no banco de dados.", e); // Se der erro, sai por aqui
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao listar locais do MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
         }
+        return locais;
     }
 }

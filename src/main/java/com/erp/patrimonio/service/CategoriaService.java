@@ -10,15 +10,12 @@ import com.erp.patrimonio.repository.CategoriaRepository;
 
 public class CategoriaService {
 
-    private static final String ERRO_CATEGORIA_NAO_ENCONTRADA
-            = "Categoria não encontrada.";
+    private static final String ERRO_CATEGORIA_NAO_ENCONTRADA = "Categoria não encontrada.";
 
-    private static final String ERRO_CATEGORIA_DUPLICADA
-            = "Já existe uma categoria com esse nome.";
+    private static final String ERRO_CATEGORIA_DUPLICADA = "Já existe uma categoria com esse nome.";
 
-    private static final String ERRO_FALHA_ATUALIZACAO
-            = "Falha ao atualizar a categoria. O registro pode ter sido alterado ou removido.";
-            
+    private static final String ERRO_FALHA_ATUALIZACAO = "Falha ao atualizar a categoria. O registro pode ter sido alterado ou removido.";
+
     private final CategoriaRepository repository;
 
     public CategoriaService(CategoriaRepository repository) {
@@ -77,6 +74,9 @@ public class CategoriaService {
     }
 
     public List<Categoria> listarTodos() {
-        return repository.listarTodos();
+        List<Categoria> categorias = repository.listarTodos();
+        // Se o banco retornar null, devolvemos uma lista vazia para evitar
+        // NullPointerException
+        return categorias != null ? categorias : java.util.Collections.emptyList();
     }
 }

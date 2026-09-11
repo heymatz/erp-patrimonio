@@ -69,6 +69,7 @@ public class PatrimonioMenu {
     private void cadastrarPatrimonio() {
         String nome = console.lerTexto("Nome: ");
         String descricao = console.lerTexto("Descrição: ");
+        
         Categoria categoria = null;
         while (categoria == null) {
             try {
@@ -86,7 +87,6 @@ public class PatrimonioMenu {
         }
 
         Local local = null;
-
         while (local == null) {
             try {
                 System.out.println("=== Locais ===");
@@ -106,11 +106,8 @@ public class PatrimonioMenu {
         double valor = console.lerDouble("Valor: ");
 
         UnidadeMedida unidadeMedida = null;
-
         while (unidadeMedida == null) {
-
             System.out.println("\n=== Unidades de Medida ===");
-
             for (UnidadeMedida unidade : UnidadeMedida.values()) {
                 System.out.printf("%-15s (%s)%n",
                         unidade.name(),
@@ -123,20 +120,21 @@ public class PatrimonioMenu {
             } catch (ValidacaoException e) {
                 System.out.println(e.getMessage());
             }
-            try {
-                patrimonioService.cadastrar(
-                        nome,
-                        descricao,
-                        categoria,
-                        local,
-                        numeroSerie,
-                        valor,
-                        unidadeMedida
-                );
-                System.out.println("Patrimônio cadastrado com sucesso!");
-            } catch (DuplicidadeException | ValidacaoException e) {
-                System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
-            }
+        }
+
+        // Chamada única ao Service após coletar e validar todos os dados com segurança
+        try {
+            patrimonioService.cadastrar(
+                    nome,
+                    descricao,
+                    categoria,
+                    local,
+                    numeroSerie,
+                    valor,
+                    unidadeMedida);
+            System.out.println("Patrimônio cadastrado com sucesso!");
+        } catch (DuplicidadeException | ValidacaoException e) {
+            System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
         }
     }
 
@@ -148,11 +146,9 @@ public class PatrimonioMenu {
             Patrimonio patrimonioExistente = patrimonioService.buscarPorId(id);
 
             String novoNome = console.lerTexto(
-                    "Novo nome (atual: " + patrimonioExistente.getNome() + "): "
-            );
+                    "Novo nome (atual: " + patrimonioExistente.getNome() + "): ");
             String novaDescricao = console.lerTexto(
-                    "Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): "
-            );
+                    "Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): ");
             patrimonioService.atualizar(
                     id,
                     novoNome.isEmpty() ? patrimonioExistente.getNome() : novoNome,
@@ -161,8 +157,7 @@ public class PatrimonioMenu {
                     patrimonioExistente.getLocal(),
                     patrimonioExistente.getNumeroSerie(),
                     patrimonioExistente.getValor(),
-                    patrimonioExistente.getUnidadeMedida()
-            );
+                    patrimonioExistente.getUnidadeMedida());
 
             System.out.println("Patrimônio atualizado com sucesso!");
         } catch (EntidadeNaoEncontradaException

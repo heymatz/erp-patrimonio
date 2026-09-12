@@ -6,6 +6,8 @@ import com.erp.patrimonio.infra.ConnectionFactory;
 import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.repository.CategoriaRepository;
 import com.erp.patrimonio.repository.CategoriaRepositoryJdbc;
+import com.erp.patrimonio.repository.HistoricoMovRepository;
+import com.erp.patrimonio.repository.HistoricoMovRepositoryJdbc;
 import com.erp.patrimonio.repository.LocalRepository;
 import com.erp.patrimonio.repository.LocalRepositoryJdbc;
 import com.erp.patrimonio.repository.PatrimonioRepository;
@@ -28,25 +30,28 @@ public class MenuPrincipal {
         scanner = new Scanner(System.in);
         console = new ConsoleUtils(scanner);
 
-        // 1. Instancia a infraestrutura base de conexões e transações
+        // Instancia a infraestrutura base de conexões e transações
         ConnectionFactory connectionFactory = new ConnectionFactory();
         TransactionManager transactionManager = new TransactionManager(connectionFactory);
 
-        // 2. Instancia os repositórios injetando a factory e o transactionManager
+        // Instancia os repositórios injetando a factory e o transactionManager
         PatrimonioRepository patrimonioRepository = new PatrimonioRepositoryJdbc(connectionFactory, transactionManager);
         LocalRepository localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
         CategoriaRepository categoriaRepository = new CategoriaRepositoryJdbc(connectionFactory, transactionManager);
 
-        // 3. Instancia os serviços
-        PatrimonioService patrimonioService = new PatrimonioService(patrimonioRepository);
+        // Instancia o repositório de histórico de movimentações
+        HistoricoMovRepository historicoMovRepository = new HistoricoMovRepositoryJdbc(connectionFactory,
+                transactionManager);
+
+        // Instancia os serviços injetando os repositórios
+        PatrimonioService patrimonioService = new PatrimonioService(patrimonioRepository, historicoMovRepository);
         LocalService localService = new LocalService(localRepository);
         CategoriaService categoriaService = new CategoriaService(categoriaRepository);
 
-        // 4. Instancia os menus
+        // Instancia os menus
         patrimonioMenu = new PatrimonioMenu(console, patrimonioService, categoriaService, localService);
         localMenu = new LocalMenu(console, localService);
         categoriaMenu = new CategoriaMenu(console, categoriaService);
-
     }
 
     public void executar() {

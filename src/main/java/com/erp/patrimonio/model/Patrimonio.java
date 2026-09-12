@@ -21,6 +21,10 @@ public class Patrimonio {
     private boolean ativo;
     private UnidadeMedida unidadeMedida;
 
+    // Construtor vazio para frameworks que necessitam de um construtor sem argumentos
+    public Patrimonio() {
+    }
+
     public Patrimonio(
             int id,
             String nome,

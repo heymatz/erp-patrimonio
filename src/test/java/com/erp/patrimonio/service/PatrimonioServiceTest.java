@@ -21,6 +21,8 @@ import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.repository.CategoriaRepository;
 import com.erp.patrimonio.repository.CategoriaRepositoryJdbc;
+import com.erp.patrimonio.repository.HistoricoMovRepository;
+import com.erp.patrimonio.repository.HistoricoMovRepositoryJdbc;
 import com.erp.patrimonio.repository.LocalRepository;
 import com.erp.patrimonio.repository.LocalRepositoryJdbc;
 import com.erp.patrimonio.repository.PatrimonioRepository;
@@ -45,6 +47,11 @@ class PatrimonioServiceTest {
                                 transactionManager);
                 LocalRepository localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
 
+                // Instancia o repositório de histórico para satisfazer o novo construtor do
+                // Service
+                HistoricoMovRepository historicoMovRepository = new HistoricoMovRepositoryJdbc(connectionFactory,
+                                transactionManager);
+
                 // Limpa o banco antes de cada teste
                 try (Connection conn = connectionFactory.recuperarConexao();
                                 Statement stmt = conn.createStatement()) {
@@ -68,8 +75,8 @@ class PatrimonioServiceTest {
                                 "Primeiro andar");
                 localRepository.salvar(this.local);
 
-                // Passando apenas o argumento exigido pelo construtor da classe
-                patrimonioService = new PatrimonioService(patrimonioRepository);
+                // Passa o repositório de HistoricoMov para o construtor do Service
+                patrimonioService = new PatrimonioService(patrimonioRepository, historicoMovRepository);
         }
 
         private Patrimonio cadastrarPatrimonio() {
@@ -220,7 +227,9 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN999999",
                                 6000.00,
-                                UnidadeMedida.CAIXA);
+                                UnidadeMedida.CAIXA,
+                                "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
+                );
 
                 assertEquals(patrimonio.getId(), atualizado.getId());
                 assertEquals("Notebook Atualizado", atualizado.getNome());
@@ -245,7 +254,9 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN999999",
                                 5500.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE,
+                                "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
+                );
 
                 assertEquals("Notebook", atualizado.getNome());
                 assertEquals(
@@ -265,7 +276,8 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN123456",
                                 6000.00,
-                                UnidadeMedida.CAIXA // Modifique para uma unidade diferente
+                                UnidadeMedida.CAIXA,
+                                "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
                 );
 
                 assertEquals("Notebook Atualizado", atualizado.getNome());
@@ -286,7 +298,10 @@ class PatrimonioServiceTest {
                                                 local,
                                                 "SN123456",
                                                 5000.00,
-                                                UnidadeMedida.UNIDADE));
+                                                UnidadeMedida.UNIDADE,
+                                                "" // Passa uma string vazia como motivo para o teste compilar com a
+                                                   // nova regra
+                                ));
         }
 
         @Test
@@ -313,7 +328,10 @@ class PatrimonioServiceTest {
                                                 local,
                                                 "SN999999",
                                                 4500.00,
-                                                UnidadeMedida.UNIDADE));
+                                                UnidadeMedida.UNIDADE,
+                                                "" // Passa uma string vazia como motivo para o teste compilar com a
+                                                   // nova regra
+                                ));
         }
 
         @Test
@@ -340,6 +358,9 @@ class PatrimonioServiceTest {
                                                 local,
                                                 "SN123456",
                                                 4500.00,
-                                                UnidadeMedida.UNIDADE));
+                                                UnidadeMedida.UNIDADE,
+                                                "" // Passa uma string vazia como motivo para o teste compilar com a
+                                                   // nova regra
+                                ));
         }
 }

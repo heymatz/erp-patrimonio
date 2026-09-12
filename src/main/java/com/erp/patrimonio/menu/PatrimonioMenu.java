@@ -69,7 +69,7 @@ public class PatrimonioMenu {
     private void cadastrarPatrimonio() {
         String nome = console.lerTexto("Nome: ");
         String descricao = console.lerTexto("Descrição: ");
-        
+
         Categoria categoria = null;
         while (categoria == null) {
             try {
@@ -149,15 +149,35 @@ public class PatrimonioMenu {
                     "Novo nome (atual: " + patrimonioExistente.getNome() + "): ");
             String novaDescricao = console.lerTexto(
                     "Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): ");
+
+            // --- LÓGICA DE TRANSFERÊNCIA DE LOCAL ---
+            Local localAtual = patrimonioExistente.getLocal();
+            System.out.println("Local atual: " + localAtual.getNome() + " (ID: " + localAtual.getId() + ")");
+            int novoLocalId = console.lerInteiro("Novo ID do local (Digite 0 para manter o atual): ");
+
+            Local novoLocal = localAtual;
+            String motivoMovimentacao = "";
+
+            if (novoLocalId != 0 && novoLocalId != localAtual.getId()) {
+                // Busca o novo local no banco. Se não existir, vai lançar
+                // EntidadeNaoEncontradaException
+                novoLocal = localService.buscarPorId(novoLocalId);
+                motivoMovimentacao = console.lerTexto("Motivo da transferência: ");
+            }
+            // --- FIM DA LÓGICA DE TRANSFERÊNCIA DE LOCAL ---
+
+            // Chamada única ao Service para atualizar o patrimônio, incluindo a
+            // movimentação se houver
             patrimonioService.atualizar(
                     id,
                     novoNome.isEmpty() ? patrimonioExistente.getNome() : novoNome,
                     novaDescricao.isEmpty() ? patrimonioExistente.getDescricao() : novaDescricao,
                     patrimonioExistente.getCategoria(),
-                    patrimonioExistente.getLocal(),
+                    novoLocal, // Passando o local (novo ou o mesmo de antes)
                     patrimonioExistente.getNumeroSerie(),
                     patrimonioExistente.getValor(),
-                    patrimonioExistente.getUnidadeMedida());
+                    patrimonioExistente.getUnidadeMedida(),
+                    motivoMovimentacao); // Novo parâmetro para o motivo da movimentação
 
             System.out.println("Patrimônio atualizado com sucesso!");
         } catch (EntidadeNaoEncontradaException

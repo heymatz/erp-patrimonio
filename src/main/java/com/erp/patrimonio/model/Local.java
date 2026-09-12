@@ -11,6 +11,10 @@ public class Local {
     private String nome;
     private String descricao;
 
+    // Construtor vazio para frameworks que necessitam de um construtor sem argumentos
+    public Local() {
+    }
+
     public Local(int id, String nome, String descricao) {
         this.id = id;
         setNome(nome);

@@ -27,7 +27,7 @@ public class PatrimonioService {
 
     private final HistoricoMovRepository historicoMovRepository;
 
-    //  Construtor para injeção de dependência do repositório de HistoricoMov
+    // Construtor para injeção de dependência do repositório de HistoricoMov
     public PatrimonioService(PatrimonioRepository repository, HistoricoMovRepository historicoMovRepository) {
         this.repository = repository;
         this.historicoMovRepository = historicoMovRepository;
@@ -70,21 +70,25 @@ public class PatrimonioService {
         return patrimonio; // Retorna o objeto já com o id gerado
     }
 
-    public void remover(int id) {
-        buscarPorId(id);
-        repository.remover(id);
-    }
-
-    public List<Patrimonio> listarTodos() {
-        return repository.listarTodos();
-    }
-
     public Patrimonio buscarPorId(int id) {
         Patrimonio patrimonio = repository.buscarPorId(id);
         if (patrimonio == null) {
             throw new EntidadeNaoEncontradaException(ERRO_PATRIMONIO_NAO_ENCONTRADO);
         }
         return patrimonio;
+    }
+
+    public List<Patrimonio> listarTodos() {
+        return repository.listarTodos();
+    }
+
+    public List<HistoricoMov> listarHistoricoMovimentacoes(int patrimonioId) {
+        // Aproveita a lógica de validação do método buscarPorId para garantir que o
+        // patrimônio existe
+        buscarPorId(patrimonioId);
+
+        // Chama o repositório para listar o histórico de movimentações do patrimônio
+        return historicoMovRepository.listarPorPatrimonio(patrimonioId);
     }
 
     public Patrimonio atualizar(
@@ -143,5 +147,10 @@ public class PatrimonioService {
         }
 
         return atualizado;
+    }
+
+    public void remover(int id) {
+        buscarPorId(id);
+        repository.remover(id);
     }
 }

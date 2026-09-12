@@ -1,10 +1,13 @@
 package com.erp.patrimonio.menu;
 
+import java.util.List;
+
 import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
+import com.erp.patrimonio.model.HistoricoMov;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.service.CategoriaService;
@@ -42,6 +45,7 @@ public class PatrimonioMenu {
             System.out.println("3 - Remover");
             System.out.println("4 - Listar");
             System.out.println("5 - Buscar por ID");
+            System.out.println("6 - Listar histórico de movimentações");
             System.out.println("0 - Voltar");
 
             opcao = console.lerInteiro("Escolha uma opção: ");
@@ -57,6 +61,8 @@ public class PatrimonioMenu {
                     listarTodosPatrimonios();
                 case 5 ->
                     buscarPatrimonioPorId();
+                case 6 ->
+                    listarHistoricoMovimentacoes();
                 case 0 ->
                     System.out.println("Voltando...");
                 default ->
@@ -214,6 +220,35 @@ public class PatrimonioMenu {
             Patrimonio patrimonio = patrimonioService.buscarPorId(id);
             System.out.println(patrimonio);
         } catch (EntidadeNaoEncontradaException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void listarHistoricoMovimentacoes() {
+        int id = console.lerInteiro("ID do patrimônio para ver o histórico: ");
+
+        try {
+            // Chama o método do Service para listar o histórico de movimentações do patrimônio
+            List<HistoricoMov> historico = patrimonioService.listarHistoricoMovimentacoes(id);
+
+            if (historico.isEmpty()) {
+                System.out.println("\nNenhuma movimentação registrada para este patrimônio.");
+                return;
+            }
+
+            System.out.println("\n=== Histórico de Movimentação ===");
+            for (HistoricoMov mov : historico) {
+                // Exibe os detalhes da movimentação, incluindo data, origem, destino e motivo
+                System.out.printf("Data: %s | Origem (ID: %d) -> Destino (ID: %d) | Motivo: %s%n",
+                        mov.getDataMovimentacao(),
+                        mov.getLocalOrigem().getId(),
+                        mov.getLocalDestino().getId(),
+                        mov.getMotivo());
+            }
+            System.out.println("=================================");
+
+        } catch (EntidadeNaoEncontradaException e) {
+            // Se o ID do patrimônio não existir, o Service lança a exceção
             System.out.println(e.getMessage());
         }
     }

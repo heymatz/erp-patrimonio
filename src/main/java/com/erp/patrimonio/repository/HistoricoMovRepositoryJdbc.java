@@ -1,11 +1,5 @@
 package com.erp.patrimonio.repository;
 
-import com.erp.patrimonio.infra.ConnectionFactory;
-import com.erp.patrimonio.infra.TransactionManager;
-import com.erp.patrimonio.model.HistoricoMov;
-import com.erp.patrimonio.model.Local;
-import com.erp.patrimonio.model.Patrimonio;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +7,12 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.erp.patrimonio.infra.ConnectionFactory;
+import com.erp.patrimonio.infra.TransactionManager;
+import com.erp.patrimonio.model.HistoricoMov;
+import com.erp.patrimonio.model.Local;
+import com.erp.patrimonio.model.Patrimonio;
 
 public class HistoricoMovRepositoryJdbc implements HistoricoMovRepository {
 
@@ -32,10 +32,11 @@ public class HistoricoMovRepositoryJdbc implements HistoricoMovRepository {
                 VALUES (?, ?, ?, ?, ?)
                 """;
 
-        // Obtem a conexão da transação atual
-        Connection conn = transactionManager.getCurrentConnection();
+        // Pega a conexão direto da Factory e coloca no try-with-resources para garantir
+        // que será fechada
+        try (Connection conn = connectionFactory.recuperarConexao();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, historico.getPatrimonio().getId());
             pstmt.setInt(2, historico.getLocalOrigem().getId());
             pstmt.setInt(3, historico.getLocalDestino().getId());
@@ -52,18 +53,18 @@ public class HistoricoMovRepositoryJdbc implements HistoricoMovRepository {
     public List<HistoricoMov> listarPorPatrimonio(int patrimonioId) {
         String sql = "SELECT * FROM historico_movimentacao WHERE patrimonio_id = ? ORDER BY data_movimentacao DESC";
         List<HistoricoMov> historicos = new ArrayList<>();
-
-        Connection conn = transactionManager.getCurrentConnection();
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        
+        // Faz a mesma coisa aqui, pega a conexão direto da Factory e coloca no try-with-resources
+        try (Connection conn = connectionFactory.recuperarConexao();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
             pstmt.setInt(1, patrimonioId);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 HistoricoMov hist = new HistoricoMov();
                 hist.setId(rs.getInt("id"));
-
-                // Mapeamento básico dos objetos relacionados apenas com os IDs por enquanto
+                
                 Patrimonio p = new Patrimonio();
                 p.setId(rs.getInt("patrimonio_id"));
                 hist.setPatrimonio(p);

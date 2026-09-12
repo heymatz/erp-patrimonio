@@ -17,6 +17,7 @@ import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.infra.ConnectionFactory;
 import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.model.Categoria;
+import com.erp.patrimonio.model.HistoricoMov;
 import com.erp.patrimonio.model.Local;
 import com.erp.patrimonio.model.Patrimonio;
 import com.erp.patrimonio.repository.CategoriaRepository;
@@ -30,6 +31,7 @@ import com.erp.patrimonio.repository.PatrimonioRepositoryJdbc;
 
 class PatrimonioServiceTest {
 
+        private LocalRepository localRepository;
         private PatrimonioRepository patrimonioRepository;
         private PatrimonioService patrimonioService;
         private Categoria categoria;
@@ -45,8 +47,7 @@ class PatrimonioServiceTest {
                                 transactionManager);
                 CategoriaRepository categoriaRepository = new CategoriaRepositoryJdbc(connectionFactory,
                                 transactionManager);
-                LocalRepository localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
-
+                this.localRepository = new LocalRepositoryJdbc(connectionFactory, transactionManager);
                 // Instancia o repositório de histórico para satisfazer o novo construtor do
                 // Service
                 HistoricoMovRepository historicoMovRepository = new HistoricoMovRepositoryJdbc(connectionFactory,
@@ -55,6 +56,9 @@ class PatrimonioServiceTest {
                 // Limpa o banco antes de cada teste
                 try (Connection conn = connectionFactory.recuperarConexao();
                                 Statement stmt = conn.createStatement()) {
+                        
+                        // Limpa as tabelas na ordem correta para evitar problemas de Foreign Key
+                        stmt.executeUpdate("DELETE FROM historico_movimentacao");
                         stmt.executeUpdate("DELETE FROM patrimonios");
                         stmt.executeUpdate("DELETE FROM locais");
                         stmt.executeUpdate("DELETE FROM categorias");
@@ -362,5 +366,40 @@ class PatrimonioServiceTest {
                                                 "" // Passa uma string vazia como motivo para o teste compilar com a
                                                    // nova regra
                                 ));
+        }
+
+        @Test
+        void deveRegistrarHistoricoQuandoLocalForAlterado() {
+                // Cadastra um patrimônio inicial no setup do teste já num local específico
+                Patrimonio patrimonio = cadastrarPatrimonio();
+
+                // Cria e salva um novo local de destino no banco para simular a movimentação
+                Local novoLocal = new Local(2, "Sala do RH", "Segundo Andar");
+                localRepository.salvar(novoLocal);
+
+                String motivo = "Transferência de departamento";
+
+                // Chama o atualizar trocando apenas o local e passando o motivo
+                patrimonioService.atualizar(
+                                patrimonio.getId(),
+                                patrimonio.getNome(),
+                                patrimonio.getDescricao(),
+                                patrimonio.getCategoria(),
+                                novoLocal, // Aqui é onde o local é alterado
+                                patrimonio.getNumeroSerie(),
+                                patrimonio.getValor(),
+                                patrimonio.getUnidadeMedida(),
+                                motivo);
+
+                // Puxa o histórico e usa os asserts para verificar se a movimentação foi
+                // registrada corretamente
+                List<HistoricoMov> historico = patrimonioService.listarHistoricoMovimentacoes(patrimonio.getId());
+
+                assertEquals(1, historico.size(), "Deve haver exatamente 1 registro de movimentação");
+
+                HistoricoMov mov = historico.get(0);
+                assertEquals(local.getId(), mov.getLocalOrigem().getId(), "O local de origem deve ser a Sala 101");
+                assertEquals(novoLocal.getId(), mov.getLocalDestino().getId(), "O local de destino deve ser o RH");
+                assertEquals(motivo, mov.getMotivo(), "O motivo deve bater com o que digitamos");
         }
 }

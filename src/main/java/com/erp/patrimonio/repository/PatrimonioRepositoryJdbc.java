@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.infra.ConnectionFactory;
@@ -82,7 +83,7 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                 throw new ValidacaoException("O patrimônio precisa estar vinculado a um local com ID válido.");
             }
             stmt.setInt(8, patrimonio.getLocal().getId());
-            
+
             // Novos campos de controle de estoque
             stmt.setInt(9, patrimonio.getQuantidade());
             stmt.setInt(10, patrimonio.getEstoqueMinimo());
@@ -525,6 +526,90 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao listar patrimônios do banco de dados.", e);
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn);
+        }
+
+        return patrimonios;
+    }
+
+    @Override
+    public List<Patrimonio> listarEstoqueBaixo() {
+        List<Patrimonio> patrimonios = new ArrayList<>();
+
+        String sql = """
+                SELECT
+                    p.id AS patrimonio_id,
+                    p.nome AS patrimonio_nome,
+                    p.descricao AS patrimonio_descricao,
+                    p.valor,
+                    p.unidade_medida,
+                    p.numero_serie,
+                    p.quantidade,
+                    p.estoque_minimo,
+                    c.id AS categoria_id,
+                    c.nome AS categoria_nome,
+                    c.descricao AS categoria_descricao,
+                    c.tipo_item AS categoria_tipo_item,
+                    l.id AS local_id,
+                    l.nome AS local_nome,
+                    l.descricao AS local_descricao
+                FROM patrimonios p
+                INNER JOIN categorias c ON p.categoria_id = c.id
+                INNER JOIN locais l ON p.local_id = l.id
+                WHERE c.tipo_item = 'ESTOQUE'
+                  AND p.quantidade <= p.estoque_minimo
+                """;
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = obterConexao();
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Categoria categoria = new Categoria(
+                        rs.getInt("categoria_id"),
+                        rs.getString("categoria_nome"),
+                        rs.getString("categoria_descricao"),
+                        TipoItem.valueOf(rs.getString("categoria_tipo_item"))); 
+                        // Adiciona o tipo_item ao construtor da Categoria
+
+                Local local = new Local(
+                        rs.getInt("local_id"),
+                        rs.getString("local_nome"),
+                        rs.getString("local_descricao"));
+
+                Patrimonio patrimonio = new Patrimonio(
+                        rs.getInt("patrimonio_id"),
+                        rs.getString("patrimonio_nome"),
+                        rs.getString("patrimonio_descricao"),
+                        categoria,
+                        local,
+                        rs.getString("numero_serie"),
+                        rs.getDouble("valor"),
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida")),
+                        rs.getInt("quantidade"),
+                        rs.getInt("estoque_minimo"));
+
+                patrimonios.add(patrimonio);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao listar estoque baixo do banco de dados.", e);
         } finally {
             try {
                 if (rs != null)

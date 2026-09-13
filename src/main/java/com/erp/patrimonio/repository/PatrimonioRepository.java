@@ -19,4 +19,6 @@ public interface PatrimonioRepository {
     Patrimonio buscarPorNumeroSerie(String numeroSerie);
 
     List<Patrimonio> listarTodos();
+
+    List<Patrimonio> listarEstoqueBaixo();
 }

@@ -1,5 +1,6 @@
 package com.erp.patrimonio.model;
 
+import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.exception.ValidacaoException;
 
 public class Categoria {
@@ -10,12 +11,26 @@ public class Categoria {
     private int id;
     private String nome;
     private String descricao;
+    private TipoItem tipoItem;
 
-    public Categoria(int id, String nome, String descricao) {
+    // --- Retrocompatibilidade com versões antigas do sistema ---
+    public Categoria(int id, String nome, String descricao, TipoItem tipoItem) {
         this.id = id;
-        setNome(nome);
-        setDescricao(descricao);
+        this.setNome(nome);
+        this.setDescricao(descricao);
+        this.tipoItem = (tipoItem != null) ? tipoItem : TipoItem.PATRIMONIO;
     }
+
+    // Seta o tipoItem como PATRIMONIO por padrão para evitar problemas de quebra de
+    // código em versões antigas do sistema que não passavam esse parâmetro
+    public Categoria(int id, String nome, String descricao) {
+        this(id, nome, descricao, TipoItem.PATRIMONIO);
+    }
+
+    // Construtor vazio para frameworks que necessitam de um construtor sem argumentos
+    public Categoria() {
+    }
+    // --- Fim da retrocompatibilidade ---
 
     public int getId() {
         return id;
@@ -31,6 +46,10 @@ public class Categoria {
 
     public String getDescricao() {
         return descricao;
+    }
+
+    public TipoItem getTipoItem() {
+        return tipoItem;
     }
 
     public void setNome(String nome) {
@@ -61,6 +80,13 @@ public class Categoria {
         }
 
         this.descricao = descricao;
+    }
+
+    public void setTipoItem(TipoItem tipoItem) {
+        if (tipoItem == null) {
+            throw new ValidacaoException("O tipo de item é obrigatório.");
+        }
+        this.tipoItem = tipoItem;
     }
 
     @Override

@@ -6,7 +6,8 @@ USE erp_patrimonio;
 CREATE TABLE IF NOT EXISTS categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    descricao VARCHAR(255)
+    descricao VARCHAR(255),
+    tipo_item VARCHAR(30) NOT NULL DEFAULT 'PATRIMONIO'
 );
 
 -- Cria a tabela de Local (no plural)

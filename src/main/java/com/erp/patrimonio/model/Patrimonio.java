@@ -1,5 +1,6 @@
 package com.erp.patrimonio.model;
 
+import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.ValidacaoException;
 
@@ -81,6 +82,10 @@ public class Patrimonio {
 
     public UnidadeMedida getUnidadeMedida() {
         return unidadeMedida;
+    }
+
+    public TipoItem getTipoItem() {
+        return categoria.getTipoItem();
     }
 
     public boolean isAtivo() {

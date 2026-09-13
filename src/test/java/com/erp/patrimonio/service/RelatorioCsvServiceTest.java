@@ -62,4 +62,25 @@ public class RelatorioCsvServiceTest {
         // separador ';'
         assertEquals("105;Caneta Azul;SN-999;Material de Escritório;2;50;Almoxarifado Central", linhas.get(1));
     }
+
+    @Test
+    void deveLancarExcecaoENaoGerarCsvSeListaEstiverVazia(@TempDir Path tempDir) {
+        // Arrange
+        RelatorioCsvService service = new RelatorioCsvService();
+        Path caminhoArquivoTeste = tempDir.resolve("teste_vazio.csv");
+
+        // Act & Assert
+        // Verifica se o sistema lança a exceção corretamente
+        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.exportarEstoqueBaixo(List.of(), caminhoArquivoTeste.toString()));
+
+        // Verifica se a mensagem de erro é a esperada
+        org.junit.jupiter.api.Assertions.assertEquals("Não há itens com estoque baixo para gerar o relatório.",
+                exception.getMessage());
+
+        // Garante que o arquivo físico não foi criado no disco
+        org.junit.jupiter.api.Assertions.assertFalse(java.nio.file.Files.exists(caminhoArquivoTeste),
+                "O arquivo CSV não deveria ser criado.");
+    }
 }

@@ -16,6 +16,11 @@ public class RelatorioCsvService {
      */
     public void exportarEstoqueBaixo(List<Patrimonio> itens, String caminhoArquivo) {
         
+        // Impede a geração se a lista estiver vazia
+        if (itens == null || itens.isEmpty()) {
+            throw new IllegalArgumentException("Não há itens com estoque baixo para gerar o relatório.");
+        }
+
         // O try-with-resources garante que o arquivo será fechado e salvo corretamente ao final, 
         // mesmo se der erro no meio do caminho.
         try (PrintWriter writer = new PrintWriter(new FileWriter(caminhoArquivo))) {

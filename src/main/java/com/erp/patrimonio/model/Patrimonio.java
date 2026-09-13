@@ -21,11 +21,42 @@ public class Patrimonio {
     private double valor;
     private boolean ativo;
     private UnidadeMedida unidadeMedida;
+    private int quantidade;
+    private int estoqueMinimo;
 
-    // Construtor vazio para frameworks que necessitam de um construtor sem argumentos
+    // Construtor vazio para frameworks que necessitam de um construtor sem
+    // argumentos
     public Patrimonio() {
     }
 
+    // Construtor principal com todos os atributos
+    public Patrimonio(
+            int id,
+            String nome,
+            String descricao,
+            Categoria categoria,
+            Local local,
+            String numeroSerie,
+            double valor,
+            UnidadeMedida unidadeMedida,
+            int quantidade,
+            int estoqueMinimo) {
+
+        this.id = id;
+        setNome(nome);
+        setDescricao(descricao);
+        setCategoria(categoria);
+        setLocal(local);
+        setNumeroSerie(numeroSerie);
+        setValor(valor);
+        setUnidadeMedida(unidadeMedida);
+        setQuantidade(quantidade);
+        setEstoqueMinimo(estoqueMinimo);
+        this.ativo = true;
+    }
+
+    // --- Retrocompatibilidade com versões antigas do sistema ---
+    // Construtor antigo que não tinha os atributos quantidade e estoqueMinimo
     public Patrimonio(
             int id,
             String nome,
@@ -36,17 +67,20 @@ public class Patrimonio {
             double valor,
             UnidadeMedida unidadeMedida) {
 
-        this.id = id;
-
-        setNome(nome);
-        setDescricao(descricao);
-        setCategoria(categoria);
-        setLocal(local);
-        setNumeroSerie(numeroSerie);
-        setValor(valor);
-        setUnidadeMedida(unidadeMedida);
-        this.ativo = true;
+        // Chama o construtor principal passando os dados antigos + Quantidade=1 e
+        // EstoqueMinimo=0 por padrão
+        this(id,
+                nome,
+                descricao,
+                categoria,
+                local,
+                numeroSerie,
+                valor,
+                unidadeMedida,
+                1,
+                0);
     }
+    // --- Fim da retrocompatibilidade ---
 
     public int getId() {
         return id;
@@ -55,7 +89,7 @@ public class Patrimonio {
     public void setId(int id) {
         this.id = id;
     }
-    
+
     public String getNome() {
         return nome;
     }
@@ -84,6 +118,14 @@ public class Patrimonio {
         return unidadeMedida;
     }
 
+    public int getQuantidade() {
+        return quantidade;
+    }
+
+    public int getEstoqueMinimo() {
+        return estoqueMinimo;
+    }
+
     public TipoItem getTipoItem() {
         return categoria.getTipoItem();
     }
@@ -101,8 +143,7 @@ public class Patrimonio {
 
         if (nome.length() > MAX_NOME) {
             throw new ValidacaoException(
-                    "O nome deve ter no máximo " + MAX_NOME + " caracteres."
-            );
+                    "O nome deve ter no máximo " + MAX_NOME + " caracteres.");
         }
         this.nome = nome;
     }
@@ -116,8 +157,7 @@ public class Patrimonio {
 
         if (descricao.length() > MAX_DESCRICAO) {
             throw new ValidacaoException(
-                    "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres."
-            );
+                    "A descrição deve ter no máximo " + MAX_DESCRICAO + " caracteres.");
         }
         this.descricao = descricao;
     }
@@ -125,8 +165,7 @@ public class Patrimonio {
     public void setCategoria(Categoria categoria) {
         if (categoria == null) {
             throw new ValidacaoException(
-                    "A categoria é obrigatória."
-            );
+                    "A categoria é obrigatória.");
         }
         this.categoria = categoria;
     }
@@ -134,8 +173,7 @@ public class Patrimonio {
     public void setLocal(Local local) {
         if (local == null) {
             throw new ValidacaoException(
-                    "O local é obrigatório."
-            );
+                    "O local é obrigatório.");
         }
         this.local = local;
     }
@@ -143,8 +181,7 @@ public class Patrimonio {
     public void setNumeroSerie(String numeroSerie) {
         if (numeroSerie == null || numeroSerie.isBlank()) {
             throw new ValidacaoException(
-                    "O número de série é obrigatório."
-            );
+                    "O número de série é obrigatório.");
         }
 
         this.numeroSerie = numeroSerie.trim();
@@ -152,8 +189,7 @@ public class Patrimonio {
         if (numeroSerie.length() > MAX_NUM_SERIE) {
             throw new ValidacaoException(
                     "O número de série deve ter no máximo "
-                    + MAX_NUM_SERIE + " caracteres."
-            );
+                            + MAX_NUM_SERIE + " caracteres.");
         } // Limitando o tamanho através de uma constante
 
         this.numeroSerie = numeroSerie;
@@ -162,8 +198,7 @@ public class Patrimonio {
     public void setValor(double valor) {
         if (valor <= 0) {
             throw new ValidacaoException(
-                    "O valor deve ser maior que zero."
-            );
+                    "O valor deve ser maior que zero.");
         }
         this.valor = valor;
     }
@@ -174,6 +209,20 @@ public class Patrimonio {
         }
 
         this.unidadeMedida = unidadeMedida;
+    }
+
+    public void setQuantidade(int quantidade) {
+        if (quantidade < 0) {
+            throw new ValidacaoException("A quantidade não pode ser negativa.");
+        }
+        this.quantidade = quantidade;
+    }
+
+    public void setEstoqueMinimo(int estoqueMinimo) {
+        if (estoqueMinimo < 0) {
+            throw new ValidacaoException("O estoque mínimo não pode ser negativo.");
+        }
+        this.estoqueMinimo = estoqueMinimo;
     }
 
     public void ativar() {

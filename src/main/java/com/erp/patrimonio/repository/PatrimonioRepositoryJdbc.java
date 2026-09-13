@@ -51,8 +51,8 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
         }
 
         // Validações adicionais podem ser feitas aqui, se necessário
-        String sql = "INSERT INTO patrimonios (nome, descricao, numero_serie, valor, unidade_medida, ativo, categoria_id, local_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO patrimonios (nome, descricao, numero_serie, valor, unidade_medida, ativo, categoria_id, local_id, quantidade, estoque_minimo) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -82,6 +82,10 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                 throw new ValidacaoException("O patrimônio precisa estar vinculado a um local com ID válido.");
             }
             stmt.setInt(8, patrimonio.getLocal().getId());
+            
+            // Novos campos de controle de estoque
+            stmt.setInt(9, patrimonio.getQuantidade());
+            stmt.setInt(10, patrimonio.getEstoqueMinimo());
 
             stmt.executeUpdate();
 
@@ -123,6 +127,8 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                     p.valor,
                     p.unidade_medida,
                     p.numero_serie,
+                    p.quantidade,
+                    p.estoque_minimo,
                     c.id AS categoria_id,
                     c.nome AS categoria_nome,
                     c.descricao AS categoria_descricao,
@@ -167,7 +173,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                         local,
                         rs.getString("numero_serie"),
                         rs.getDouble("valor"),
-                        UnidadeMedida.valueOf(rs.getString("unidade_medida")));
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida")),
+                        rs.getInt("quantidade"),
+                        rs.getInt("estoque_minimo"));
 
                 return patrimonio;
             }
@@ -230,7 +238,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                     unidade_medida = ?,
                     ativo = ?,
                     categoria_id = ?,
-                    local_id = ?
+                    local_id = ?,
+                    quantidade = ?,
+                    estoque_minimo = ?
                 WHERE id = ?
                 """;
 
@@ -258,7 +268,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
             stmt.setBoolean(6, patrimonio.isAtivo());
             stmt.setInt(7, patrimonio.getCategoria().getId());
             stmt.setInt(8, patrimonio.getLocal().getId());
-            stmt.setInt(9, patrimonio.getId());
+            stmt.setInt(9, patrimonio.getQuantidade());
+            stmt.setInt(10, patrimonio.getEstoqueMinimo());
+            stmt.setInt(11, patrimonio.getId()); // O ID agora é o parâmetro 11
 
             // Executa o comando e retorna true se alguma linha foi alterada
             int linhasAfetadas = stmt.executeUpdate();
@@ -291,6 +303,8 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                     p.valor,
                     p.unidade_medida,
                     p.numero_serie,
+                    p.quantidade,
+                    p.estoque_minimo,
                     c.id AS categoria_id,
                     c.nome AS categoria_nome,
                     c.descricao AS categoria_descricao,
@@ -335,7 +349,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                         local,
                         rs.getString("numero_serie"),
                         rs.getDouble("valor"),
-                        UnidadeMedida.valueOf(rs.getString("unidade_medida")));
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida")),
+                        rs.getInt("quantidade"),
+                        rs.getInt("estoque_minimo"));
 
                 return patrimonio;
             }
@@ -375,6 +391,8 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                     p.valor,
                     p.unidade_medida,
                     p.numero_serie,
+                    p.quantidade,
+                    p.estoque_minimo,
                     c.id AS categoria_id,
                     c.nome AS categoria_nome,
                     c.descricao AS categoria_descricao,
@@ -420,7 +438,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                         local,
                         rs.getString("numero_serie"),
                         rs.getDouble("valor"),
-                        UnidadeMedida.valueOf(rs.getString("unidade_medida")));
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida")),
+                        rs.getInt("quantidade"),
+                        rs.getInt("estoque_minimo"));
 
                 return patrimonio;
             }
@@ -456,6 +476,8 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                     p.valor,
                     p.unidade_medida,
                     p.numero_serie,
+                    p.quantidade,
+                    p.estoque_minimo,
                     c.id AS categoria_id,
                     c.nome AS categoria_nome,
                     c.descricao AS categoria_descricao,
@@ -495,7 +517,9 @@ public class PatrimonioRepositoryJdbc implements PatrimonioRepository {
                         local,
                         rs.getString("numero_serie"),
                         rs.getDouble("valor"),
-                        UnidadeMedida.valueOf(rs.getString("unidade_medida")));
+                        UnidadeMedida.valueOf(rs.getString("unidade_medida")),
+                        rs.getInt("quantidade"),
+                        rs.getInt("estoque_minimo"));
                 patrimonios.add(patrimonio);
             }
 

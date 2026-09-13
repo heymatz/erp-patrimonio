@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS patrimonios (
     numero_serie VARCHAR(50) NOT NULL UNIQUE,
     valor DECIMAL(10,2) NOT NULL,
     unidade_medida VARCHAR(30) NOT NULL,
+    quantidade INT NOT NULL DEFAULT 1,
+    estoque_minimo INT NOT NULL DEFAULT 0,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     categoria_id INT NOT NULL,
     local_id INT NOT NULL,

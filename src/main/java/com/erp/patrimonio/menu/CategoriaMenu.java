@@ -1,5 +1,6 @@
 package com.erp.patrimonio.menu;
 
+import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.ValidacaoException;
@@ -59,9 +60,10 @@ public class CategoriaMenu {
 
         String nome = console.lerTexto("Nome da categoria: ");
         String descricao = console.lerTexto("Descrição da categoria: ");
+        TipoItem tipoItem = lerTipoItemCadastro();
 
         try {
-            categoriaService.cadastrar(nome, descricao);
+            categoriaService.cadastrar(nome, descricao, tipoItem);
             System.out.println("Categoria cadastrada com sucesso!");
         } catch (DuplicidadeException | ValidacaoException e) {
             System.out.println("Erro ao cadastrar categoria: " + e.getMessage());
@@ -78,12 +80,13 @@ public class CategoriaMenu {
                     "Novo nome (atual: " + categoriaExistente.getNome() + "): ");
             String novaDescricao = console.lerTexto(
                     "Nova descrição (atual: " + categoriaExistente.getDescricao() + "): ");
+            TipoItem novoTipo = lerTipoItemAtualizacao(categoriaExistente.getTipoItem());
 
             categoriaService.atualizar(
                     id,
                     novoNome.isEmpty() ? categoriaExistente.getNome() : novoNome,
-                    novaDescricao.isEmpty() ? categoriaExistente.getDescricao() : novaDescricao
-            );
+                    novaDescricao.isEmpty() ? categoriaExistente.getDescricao() : novaDescricao,
+                    novoTipo);
 
             System.out.println("Categoria atualizada com sucesso!");
         } catch (EntidadeNaoEncontradaException
@@ -121,6 +124,31 @@ public class CategoriaMenu {
             System.out.println("Categoria encontrada: " + categoria);
         } catch (EntidadeNaoEncontradaException e) {
             System.out.println("Erro ao buscar categoria: " + e.getMessage());
+        }
+    }
+
+    private TipoItem lerTipoItemCadastro() {
+        while (true) {
+            int opcao = console.lerInteiro("Tipo de Item (1 - Patrimônio, 2 - Estoque): ");
+            if (opcao == 1)
+                return TipoItem.PATRIMONIO;
+            if (opcao == 2)
+                return TipoItem.ESTOQUE;
+            System.out.println("Opção inválida. Digite 1 ou 2.");
+        }
+    }
+
+    private TipoItem lerTipoItemAtualizacao(TipoItem tipoAtual) {
+        while (true) {
+            int opcao = console
+                    .lerInteiro("Novo Tipo (1 - Patrimônio, 2 - Estoque, 0 - Manter [" + tipoAtual.name() + "]): ");
+            if (opcao == 0)
+                return tipoAtual;
+            if (opcao == 1)
+                return TipoItem.PATRIMONIO;
+            if (opcao == 2)
+                return TipoItem.ESTOQUE;
+            System.out.println("Opção inválida. Digite 0, 1 ou 2.");
         }
     }
 }

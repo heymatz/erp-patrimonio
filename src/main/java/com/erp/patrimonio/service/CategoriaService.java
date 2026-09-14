@@ -2,6 +2,7 @@ package com.erp.patrimonio.service;
 
 import java.util.List;
 
+import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.EstadoInvalidoException;
@@ -22,44 +23,17 @@ public class CategoriaService {
         this.repository = repository;
     }
 
-    public Categoria cadastrar(String nome, String descricao) {
+    public Categoria cadastrar(String nome, String descricao, TipoItem tipoItem) {
 
         if (repository.buscarPorNome(nome) != null) {
             throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
         }
 
-        Categoria categoria = new Categoria(0, nome, descricao);
+        Categoria categoria = new Categoria(0, nome, descricao, tipoItem);
 
         repository.salvar(categoria);
 
         return categoria;
-    }
-
-    public Categoria atualizar(int id, String nome, String descricao) {
-
-        Categoria categoria = buscarPorId(id);
-
-        Categoria existente = repository.buscarPorNome(nome);
-
-        if (existente != null && existente.getId() != id) {
-            throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
-        }
-
-        categoria.setNome(nome);
-        categoria.setDescricao(descricao);
-
-        boolean atualizado = repository.atualizar(categoria);
-
-        if (!atualizado) {
-            throw new EstadoInvalidoException(ERRO_FALHA_ATUALIZACAO);
-        }
-
-        return categoria;
-    }
-
-    public void remover(int id) {
-        buscarPorId(id);
-        repository.remover(id);
     }
 
     public Categoria buscarPorId(int id) {
@@ -78,5 +52,33 @@ public class CategoriaService {
         // Se o banco retornar null, devolvemos uma lista vazia para evitar
         // NullPointerException
         return categorias != null ? categorias : java.util.Collections.emptyList();
+    }
+
+    public Categoria atualizar(int id, String nome, String descricao, TipoItem tipoItem) {
+
+        Categoria categoria = buscarPorId(id);
+
+        Categoria existente = repository.buscarPorNome(nome);
+
+        if (existente != null && existente.getId() != id) {
+            throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
+        }
+
+        categoria.setNome(nome);
+        categoria.setDescricao(descricao);
+        categoria.setTipoItem(tipoItem);
+
+        boolean atualizado = repository.atualizar(categoria);
+
+        if (!atualizado) {
+            throw new EstadoInvalidoException(ERRO_FALHA_ATUALIZACAO);
+        }
+
+        return categoria;
+    }
+
+    public void remover(int id) {
+        buscarPorId(id);
+        repository.remover(id);
     }
 }

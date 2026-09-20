@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.infra.ConnectionFactory;
 import com.erp.patrimonio.infra.TransactionManager;
 import com.erp.patrimonio.model.Categoria;
@@ -92,7 +93,9 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN123456",
                                 5000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE,
+                                10,
+                                2);
         }
 
         @Test
@@ -106,17 +109,19 @@ class PatrimonioServiceTest {
                 assertEquals("SN123456", patrimonio.getNumeroSerie());
                 assertEquals(5000.00, patrimonio.getValor());
                 assertEquals(UnidadeMedida.UNIDADE, patrimonio.getUnidadeMedida());
+                assertEquals(10, patrimonio.getQuantidade());
+                assertEquals(2, patrimonio.getEstoqueMinimo());
         }
 
         @Test
         void deveGerarIdAutomaticamenteAoCadastrarPatrimonios() {
                 Patrimonio patrimonio1 = patrimonioService.cadastrar(
                                 "Notebook", "Notebook Dell", categoria, local, "SN123456", 5000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE, 10, 2);
 
                 Patrimonio patrimonio2 = patrimonioService.cadastrar(
                                 "Computador", "Computador Dell", categoria, local, "SN654321", 4000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE, 15, 5);
 
                 assertTrue(patrimonio1.getId() > 0);
                 assertTrue(patrimonio2.getId() > patrimonio1.getId(),
@@ -137,7 +142,8 @@ class PatrimonioServiceTest {
                                                 local,
                                                 "SN999999",
                                                 4500.00,
-                                                UnidadeMedida.UNIDADE));
+                                                UnidadeMedida.UNIDADE,
+                                                10, 2));
         }
 
         @Test
@@ -154,7 +160,8 @@ class PatrimonioServiceTest {
                                                 local,
                                                 "SN123456",
                                                 4500.00,
-                                                UnidadeMedida.UNIDADE));
+                                                UnidadeMedida.UNIDADE,
+                                                10, 2));
         }
 
         @Test
@@ -189,7 +196,8 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN654321",
                                 4000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE,
+                                5, 1);
 
                 List<Patrimonio> patrimonios = patrimonioService.listarTodos();
 
@@ -232,6 +240,7 @@ class PatrimonioServiceTest {
                                 "SN999999",
                                 6000.00,
                                 UnidadeMedida.CAIXA,
+                                12, 3,
                                 "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
                 );
 
@@ -243,6 +252,8 @@ class PatrimonioServiceTest {
                 assertEquals("SN999999", atualizado.getNumeroSerie());
                 assertEquals(6000.00, atualizado.getValor());
                 assertEquals(UnidadeMedida.CAIXA, atualizado.getUnidadeMedida());
+                assertEquals(12, atualizado.getQuantidade());
+                assertEquals(3, atualizado.getEstoqueMinimo());
         }
 
         @Test
@@ -259,6 +270,7 @@ class PatrimonioServiceTest {
                                 "SN999999",
                                 5500.00,
                                 UnidadeMedida.UNIDADE,
+                                10, 2,
                                 "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
                 );
 
@@ -281,6 +293,7 @@ class PatrimonioServiceTest {
                                 "SN123456",
                                 6000.00,
                                 UnidadeMedida.CAIXA,
+                                10, 2,
                                 "" // Passa uma string vazia como motivo para o teste compilar com a nova regra
                 );
 
@@ -303,6 +316,7 @@ class PatrimonioServiceTest {
                                                 "SN123456",
                                                 5000.00,
                                                 UnidadeMedida.UNIDADE,
+                                                10, 2,
                                                 "" // Passa uma string vazia como motivo para o teste compilar com a
                                                    // nova regra
                                 ));
@@ -320,7 +334,7 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN654321",
                                 4000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE, 10, 2);
 
                 assertThrows(
                                 DuplicidadeException.class,
@@ -333,6 +347,7 @@ class PatrimonioServiceTest {
                                                 "SN999999",
                                                 4500.00,
                                                 UnidadeMedida.UNIDADE,
+                                                10, 2,
                                                 "" // Passa uma string vazia como motivo para o teste compilar com a
                                                    // nova regra
                                 ));
@@ -350,7 +365,7 @@ class PatrimonioServiceTest {
                                 local,
                                 "SN654321",
                                 4000.00,
-                                UnidadeMedida.UNIDADE);
+                                UnidadeMedida.UNIDADE, 10, 2);
 
                 assertThrows(
                                 DuplicidadeException.class,
@@ -363,6 +378,7 @@ class PatrimonioServiceTest {
                                                 "SN123456",
                                                 4500.00,
                                                 UnidadeMedida.UNIDADE,
+                                                10, 2,
                                                 "" // Passa uma string vazia como motivo para o teste compilar com a
                                                    // nova regra
                                 ));
@@ -389,6 +405,8 @@ class PatrimonioServiceTest {
                                 patrimonio.getNumeroSerie(),
                                 patrimonio.getValor(),
                                 patrimonio.getUnidadeMedida(),
+                                patrimonio.getQuantidade(),
+                                patrimonio.getEstoqueMinimo(),
                                 motivo);
 
                 // Puxa o histórico e usa os asserts para verificar se a movimentação foi
@@ -401,5 +419,17 @@ class PatrimonioServiceTest {
                 assertEquals(local.getId(), mov.getLocalOrigem().getId(), "O local de origem deve ser a Sala 101");
                 assertEquals(novoLocal.getId(), mov.getLocalDestino().getId(), "O local de destino deve ser o RH");
                 assertEquals(motivo, mov.getMotivo(), "O motivo deve bater com o que digitamos");
+        }
+
+        @Test
+        void deveLancarExcecaoAoCadastrarComQuantidadeNegativa() {
+                assertThrows(ValidacaoException.class, () -> patrimonioService.cadastrar(
+                                "Monitor", "Monitor LG", categoria, local, "SN001", 1000.0, UnidadeMedida.UNIDADE, -5, 2));
+        }
+
+        @Test
+        void deveLancarExcecaoAoCadastrarComEstoqueMinimoNegativo() {
+                assertThrows(ValidacaoException.class, () -> patrimonioService.cadastrar(
+                                "Monitor", "Monitor LG", categoria, local, "SN001", 1000.0, UnidadeMedida.UNIDADE, 10, -2));
         }
 }

@@ -110,6 +110,10 @@ public class PatrimonioMenu {
 
         String numeroSerie = console.lerTexto("Número de série: ");
         double valor = console.lerDouble("Valor: ");
+        
+        // Coletando a quantidade e o estoque mínimo
+        int quantidade = console.lerInteiro("Quantidade: ");
+        int estoqueMinimo = console.lerInteiro("Estoque mínimo: ");
 
         UnidadeMedida unidadeMedida = null;
         while (unidadeMedida == null) {
@@ -137,7 +141,9 @@ public class PatrimonioMenu {
                     local,
                     numeroSerie,
                     valor,
-                    unidadeMedida);
+                    unidadeMedida,
+                    quantidade,      
+                    estoqueMinimo);  
             System.out.println("Patrimônio cadastrado com sucesso!");
         } catch (DuplicidadeException | ValidacaoException e) {
             System.out.println("Erro ao cadastrar patrimônio: " + e.getMessage());
@@ -155,6 +161,10 @@ public class PatrimonioMenu {
                     "Novo nome (atual: " + patrimonioExistente.getNome() + "): ");
             String novaDescricao = console.lerTexto(
                     "Nova descrição (atual: " + patrimonioExistente.getDescricao() + "): ");
+            int novaQuantidade = console.lerInteiro(
+                    "Nova quantidade (atual: " + patrimonioExistente.getQuantidade() + "): ");
+            int novoEstoqueMinimo = console.lerInteiro(
+                    "Novo estoque mínimo (atual: " + patrimonioExistente.getEstoqueMinimo() + "): ");
 
             // --- LÓGICA DE TRANSFERÊNCIA DE LOCAL ---
             Local localAtual = patrimonioExistente.getLocal();
@@ -183,6 +193,8 @@ public class PatrimonioMenu {
                     patrimonioExistente.getNumeroSerie(),
                     patrimonioExistente.getValor(),
                     patrimonioExistente.getUnidadeMedida(),
+                    novaQuantidade,     // Passando a nova quantidade na ordem certa
+                    novoEstoqueMinimo,  // Passando o novo estoque na ordem certa
                     motivoMovimentacao); // Novo parâmetro para o motivo da movimentação
 
             System.out.println("Patrimônio atualizado com sucesso!");

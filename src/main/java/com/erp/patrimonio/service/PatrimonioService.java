@@ -6,6 +6,7 @@ import com.erp.patrimonio.enums.UnidadeMedida;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.EstadoInvalidoException;
+import com.erp.patrimonio.exception.ValidacaoException; // Import necessário para as novas validações
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.model.HistoricoMov;
 import com.erp.patrimonio.model.Local;
@@ -40,7 +41,18 @@ public class PatrimonioService {
             Local local,
             String numeroSerie,
             double valor,
-            UnidadeMedida unidadeMedida) {
+            UnidadeMedida unidadeMedida,
+            int quantidade,
+            int estoqueMinimo) {
+
+        // Validações de negócio para impedir valores negativos
+        if (quantidade < 0) {
+            throw new ValidacaoException("A quantidade não pode ser negativa.");
+        }
+
+        if (estoqueMinimo < 0) {
+            throw new ValidacaoException("O estoque mínimo não pode ser negativo.");
+        }
 
         Patrimonio existenteNome = repository.buscarPorNome(nome);
 
@@ -64,7 +76,9 @@ public class PatrimonioService {
                 local,
                 numeroSerie,
                 valor,
-                unidadeMedida);
+                unidadeMedida,
+                quantidade,
+                estoqueMinimo);
 
         repository.salvar(patrimonio); // Executa o void com id gerado internamente no repositório
         return patrimonio; // Retorna o objeto já com o id gerado
@@ -104,7 +118,18 @@ public class PatrimonioService {
             String numeroSerie,
             double valor,
             UnidadeMedida unidadeMedida,
+            int quantidade,
+            int estoqueMinimo,
             String motivoMovimentacao) { // novo parâmetro para registro
+
+        // Validações de negócio para impedir valores negativos
+        if (quantidade < 0) {
+            throw new ValidacaoException("A quantidade não pode ser negativa.");
+        }
+
+        if (estoqueMinimo < 0) {
+            throw new ValidacaoException("O estoque mínimo não pode ser negativo.");
+        }
 
         // Pega o estado atual do patrimônio antes de qualquer alteração
         Patrimonio patrimonioAtual = buscarPorId(id);
@@ -128,7 +153,9 @@ public class PatrimonioService {
                 novoLocal,
                 numeroSerie,
                 valor,
-                unidadeMedida);
+                unidadeMedida,
+                quantidade,
+                estoqueMinimo);
 
         // Verifica se houve mudança de Local
         boolean localFoiAlterado = patrimonioAtual.getLocal().getId() != novoLocal.getId();

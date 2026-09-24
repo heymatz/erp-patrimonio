@@ -105,7 +105,7 @@ public class PatrimonioService {
         return historicoMovRepository.listarPorPatrimonio(patrimonioId);
     }
 
-    public List<Patrimonio> obterItensComEstoqueBaixo() {
+    public List<Patrimonio> listarEstoqueBaixo() {
         return repository.listarEstoqueBaixo();
     }
 

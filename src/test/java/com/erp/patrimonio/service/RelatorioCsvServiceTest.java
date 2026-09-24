@@ -44,7 +44,7 @@ public class RelatorioCsvServiceTest {
         List<Patrimonio> itens = List.of(caneta);
 
         // Act
-        service.exportarEstoqueBaixo(itens, caminhoArquivoTeste.toString());
+        service.exportarPatrimonios(itens, caminhoArquivoTeste.toString(), "Estoque Baixo");
 
         // Assert
         assertTrue(Files.exists(caminhoArquivoTeste), "O arquivo CSV deveria ter sido criado fisicamente.");
@@ -73,14 +73,84 @@ public class RelatorioCsvServiceTest {
         // Verifica se o sistema lança a exceção corretamente
         IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
                 IllegalArgumentException.class,
-                () -> service.exportarEstoqueBaixo(List.of(), caminhoArquivoTeste.toString()));
+                () -> service.exportarPatrimonios(List.of(), caminhoArquivoTeste.toString(), "Estoque Baixo"));
 
         // Verifica se a mensagem de erro é a esperada
-        org.junit.jupiter.api.Assertions.assertEquals("Não há itens com estoque baixo para gerar o relatório.",
+        org.junit.jupiter.api.Assertions.assertEquals("Não há itens para gerar o relatório de Estoque Baixo.",
                 exception.getMessage());
 
         // Garante que o arquivo físico não foi criado no disco
         org.junit.jupiter.api.Assertions.assertFalse(java.nio.file.Files.exists(caminhoArquivoTeste),
                 "O arquivo CSV não deveria ser criado.");
+    }
+
+    @Test
+    void deveLancarExcecaoSeListaForNull(@TempDir Path tempDir) {
+        // Arrange
+        RelatorioCsvService service = new RelatorioCsvService();
+        Path caminho = tempDir.resolve("teste_nulo.csv");
+
+        // Act & Assert
+        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.exportarPatrimonios(null, caminho.toString(), "Estoque Baixo"));
+
+        assertEquals("Não há itens para gerar o relatório de Estoque Baixo.", exception.getMessage());
+    }
+
+    @Test
+    void deveTratarCamposNulosSemLancarNullPointerException(@TempDir Path tempDir) throws Exception {
+        // Arrange
+        RelatorioCsvService service = new RelatorioCsvService();
+        Path caminho = tempDir.resolve("teste_campos_nulos.csv");
+
+        // Usamos o construtor vazio para forçar um objeto nulo e contornar a validação
+        Patrimonio itemDefeituoso = new Patrimonio();
+        itemDefeituoso.setId(106);
+        // Como não definimos o resto, o nome, série, categoria e local ficam a null (e os números a 0)
+
+        // Act
+        service.exportarPatrimonios(List.of(itemDefeituoso), caminho.toString(), "Defeituosos");
+
+        // Assert
+        List<String> linhas = Files.readAllLines(caminho);
+        // Verifica se o cabeçalho foi escrito corretamente
+        assertEquals("106;N/A;N/A;N/A;0;0;N/A", linhas.get(1));
+    }
+
+    @Test
+    void deveLimparPontoEVirgulaDosCamposParaNaoQuebrarCsv(@TempDir Path tempDir) throws Exception {
+        // Arrange
+        RelatorioCsvService service = new RelatorioCsvService();
+        Path caminho = tempDir.resolve("teste_delimitador.csv");
+
+        Categoria cat = new Categoria(1, "Hardware", "TI", TipoItem.ESTOQUE);
+        Local loc = new Local(1, "Sala 1", "Sede");
+        
+        Patrimonio itemMalicioso = new Patrimonio(
+                107, "Monitor; Dell; 24", "Desc", cat, loc, "SN;123", 100.0, UnidadeMedida.UNIDADE, 10, 2);
+
+        // Act
+        service.exportarPatrimonios(List.of(itemMalicioso), caminho.toString(), "Auditoria");
+
+        // Assert
+        List<String> linhas = Files.readAllLines(caminho);
+        assertEquals("107;Monitor, Dell, 24;SN,123;Hardware;10;2;Sala 1", linhas.get(1));
+    }
+
+    @Test
+    void deveLancarExcecaoAmigavelAoTentarSalvarEmCaminhoInvalido() {
+        // Arrange
+        RelatorioCsvService service = new RelatorioCsvService();
+        Categoria cat = new Categoria(1, "TI", "TI", TipoItem.ESTOQUE);
+        Local loc = new Local(1, "Sala 1", "Sede");
+        Patrimonio p = new Patrimonio(1, "Cabo", "Desc", cat, loc, "SN", 10.0, UnidadeMedida.UNIDADE, 1, 1);
+        
+        String caminhoInvalido = "Z:/diretorio_falso_que_nao_existe/relatorio.csv";
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> service.exportarPatrimonios(List.of(p), caminhoInvalido, "Erro IO"));
     }
 }

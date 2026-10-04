@@ -337,4 +337,38 @@ public class CategoriaServiceTest {
 
         verify(repository, never()).remover(1);
     }
+
+    // =========================================================================
+    // TESTES DE TRAVA DE SEGURANÇA
+    // =========================================================================
+
+    @Test
+    void deveBloquearAlteracaoDeTipoItemSeCategoriaEstiverEmUso() {
+        // Arrange
+        int idCategoria = 1;
+        String nome = "Monitores";
+        
+        // Categoria original está travada como TipoItem.ESTOQUE e está em uso, então não pode ser alterada para PATRIMONIO
+        Categoria categoriaExistente = new Categoria(idCategoria, nome, "Desc", TipoItem.ESTOQUE);
+        
+        // Ensina o mock de repositório a retornar a categoria existente e simular que ela está em uso
+        org.mockito.Mockito.when(repository.buscarPorId(idCategoria)).thenReturn(categoriaExistente);
+        org.mockito.Mockito.when(repository.buscarPorNome(nome)).thenReturn(categoriaExistente); // Passa na validação de nome
+        
+        // simula que o banco de dados valida que a categoria está em uso
+        org.mockito.Mockito.when(repository.isCategoriaEmUso(idCategoria)).thenReturn(true);
+
+        // Act & Assert
+        // Tenta atualizar para PATRIMONIO e esperamos que a exceção seja lançada devido à trava de segurança
+        com.erp.patrimonio.exception.ValidacaoException exception = org.junit.jupiter.api.Assertions.assertThrows(
+            com.erp.patrimonio.exception.ValidacaoException.class,
+            () -> service.atualizar(idCategoria, nome, "Desc", TipoItem.PATRIMONIO)
+        );
+
+        // Verifica se a mensagem de erro é exatamente a da nossa trava de segurança
+        org.junit.jupiter.api.Assertions.assertTrue(
+            exception.getMessage().contains("TRAVA DE SEGURANÇA"),
+            "A mensagem de erro deveria conter o alerta da trava de segurança."
+        );
+    }
 }

@@ -50,7 +50,7 @@ public class PatrimonioRepositoryJdbcTest {
 
     @Test
     public void deveSalvarPatrimonioComSucessoNoBancoDeDados() throws Exception {
-        // 1. Arrange 
+        // 1. Arrange
         Categoria categoria = prepararCategoriaNoBanco(connectionFactory);
         Local local = prepararLocalNoBanco(connectionFactory);
 
@@ -176,5 +176,49 @@ public class PatrimonioRepositoryJdbcTest {
         System.out.println("SUCESSO: Listagem trouxe o patrimônio: " + patrimonioExtraido.getNome()
                 + " | Categoria: " + patrimonioExtraido.getCategoria().getNome()
                 + " | Local: " + patrimonioExtraido.getLocal().getNome());
+    }
+
+    @Test
+    void deveRetornarTrueSeCategoriaTiverPatrimonioVinculado() throws Exception {
+        // Teste de integração precisa do TransactionManager e ConnectionFactory
+        // igual aos outros testes dessa classe.
+        TransactionManager tx = new TransactionManager(connectionFactory);
+        CategoriaRepositoryJdbc categoriaRepository = new CategoriaRepositoryJdbc(connectionFactory, tx);
+
+        // Insere uma Categoria nova no banco de dados (Usando caminho completo para evitar problema de import)
+        Categoria catTI = new Categoria(0, "TI Teste Trava", "Equipamentos", com.erp.patrimonio.enums.TipoItem.PATRIMONIO);
+        categoriaRepository.salvar(catTI);
+
+        // Verifica que acabou de ser criada e não está em uso
+        assertFalse(
+                categoriaRepository.isCategoriaEmUso(catTI.getId()),
+                "Categoria recém criada não deveria estar em uso.");
+
+        // Insere um Local no banco de dados (Direto via SQL para não depender de outros repositórios)
+        int localId;
+        try (Connection conn = connectionFactory.recuperarConexao();
+             PreparedStatement stmtLocal = conn.prepareStatement(
+                     "INSERT INTO locais (nome, descricao) VALUES ('Sala Trava', 'Sede')",
+                     Statement.RETURN_GENERATED_KEYS)) {
+
+            stmtLocal.executeUpdate();
+            ResultSet rsLocal = stmtLocal.getGeneratedKeys();
+            rsLocal.next();
+            localId = rsLocal.getInt(1);
+
+            // Cadastra um Patrimônio vinculado a essa Categoria (Direto via SQL para controle total)
+            try (PreparedStatement stmtPat = conn.prepareStatement(
+                    "INSERT INTO patrimonios (nome, descricao, numero_serie, valor, unidade_medida, quantidade, estoque_minimo, categoria_id, local_id) " +
+                    "VALUES ('Monitor Trava', 'Desc', 'SN-TRAVA', 1500.0, 'UNIDADE', 1, 0, ?, ?)")) {
+                stmtPat.setInt(1, catTI.getId());
+                stmtPat.setInt(2, localId);
+                stmtPat.executeUpdate();
+            }
+        }
+
+        // Verifica que agora a Categoria está em uso
+        assertTrue(
+                categoriaRepository.isCategoriaEmUso(catTI.getId()),
+                "A categoria deve constar como EM USO após vincularmos um patrimônio a ela!");
     }
 }

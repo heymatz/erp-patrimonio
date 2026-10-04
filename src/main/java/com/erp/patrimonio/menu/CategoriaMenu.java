@@ -3,6 +3,7 @@ package com.erp.patrimonio.menu;
 import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
+import com.erp.patrimonio.exception.EstadoInvalidoException;
 import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.service.CategoriaService;
@@ -91,7 +92,8 @@ public class CategoriaMenu {
             System.out.println("Categoria atualizada com sucesso!");
         } catch (EntidadeNaoEncontradaException
                 | DuplicidadeException
-                | ValidacaoException e) {
+                | ValidacaoException
+                | EstadoInvalidoException e) {
             System.out.println("Erro ao atualizar categoria: " + e.getMessage());
         }
     }
@@ -129,25 +131,37 @@ public class CategoriaMenu {
 
     private TipoItem lerTipoItemCadastro() {
         while (true) {
-            int opcao = console.lerInteiro("Tipo de Item (1 - Patrimônio, 2 - Estoque): ");
+            System.out.println("\nSelecione o Tipo da Categoria:");
+            System.out.println("1 - PATRIMÔNIO (Bens duráveis com número de série)");
+            System.out.println("2 - ESTOQUE (Itens de consumo / reposição)");
+
+            int opcao = console.lerInteiro("Opção: ");
+
             if (opcao == 1)
                 return TipoItem.PATRIMONIO;
             if (opcao == 2)
                 return TipoItem.ESTOQUE;
+
             System.out.println("Opção inválida. Digite 1 ou 2.");
         }
     }
 
     private TipoItem lerTipoItemAtualizacao(TipoItem tipoAtual) {
         while (true) {
-            int opcao = console
-                    .lerInteiro("Novo Tipo (1 - Patrimônio, 2 - Estoque, 0 - Manter [" + tipoAtual.name() + "]): ");
+            System.out.println("\nAlterar o Tipo da Categoria (Atual: " + tipoAtual.name() + "):");
+            System.out.println("0 - MANTER o tipo atual");
+            System.out.println("1 - PATRIMÔNIO (Bens duráveis com número de série)");
+            System.out.println("2 - ESTOQUE (Itens de consumo / reposição)");
+
+            int opcao = console.lerInteiro("Opção: ");
+
             if (opcao == 0)
                 return tipoAtual;
             if (opcao == 1)
                 return TipoItem.PATRIMONIO;
             if (opcao == 2)
                 return TipoItem.ESTOQUE;
+
             System.out.println("Opção inválida. Digite 0, 1 ou 2.");
         }
     }

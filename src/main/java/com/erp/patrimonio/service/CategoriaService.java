@@ -6,6 +6,7 @@ import com.erp.patrimonio.enums.TipoItem;
 import com.erp.patrimonio.exception.DuplicidadeException;
 import com.erp.patrimonio.exception.EntidadeNaoEncontradaException;
 import com.erp.patrimonio.exception.EstadoInvalidoException;
+import com.erp.patrimonio.exception.ValidacaoException;
 import com.erp.patrimonio.model.Categoria;
 import com.erp.patrimonio.repository.CategoriaRepository;
 
@@ -54,30 +55,39 @@ public class CategoriaService {
         return categorias != null ? categorias : java.util.Collections.emptyList();
     }
 
-    public Categoria atualizar(int id, String nome, String descricao, TipoItem tipoItem) {
+public Categoria atualizar(int id, String nome, String descricao, TipoItem novoTipoItem) {
 
-        Categoria categoria = buscarPorId(id);
-
+        Categoria categoriaAtual = buscarPorId(id);
         Categoria existente = repository.buscarPorNome(nome);
 
         if (existente != null && existente.getId() != id) {
             throw new DuplicidadeException(ERRO_CATEGORIA_DUPLICADA);
         }
 
-        categoria.setNome(nome);
-        categoria.setDescricao(descricao);
-        categoria.setTipoItem(tipoItem);
+        // Se o usuário tentar mudar o tipo e a categoria tem itens cadastrados, bloqueia a operação e lança uma exceção
+        if (categoriaAtual.getTipoItem() != novoTipoItem) {
+            if (repository.isCategoriaEmUso(id)) {
+                throw new ValidacaoException(
+                    "TRAVA DE SEGURANÇA: Não é permitido alterar o Tipo de uma categoria que já possui itens vinculados. " +
+                    "Para alterar, exclua os itens vinculados primeiro ou crie uma nova categoria."
+                );
+            }
+        }
 
-        boolean atualizado = repository.atualizar(categoria);
+        categoriaAtual.setNome(nome);
+        categoriaAtual.setDescricao(descricao);
+        categoriaAtual.setTipoItem(novoTipoItem);
 
+        boolean atualizado = repository.atualizar(categoriaAtual);
         if (!atualizado) {
             throw new EstadoInvalidoException(ERRO_FALHA_ATUALIZACAO);
         }
 
-        return categoria;
+        return categoriaAtual;
     }
 
     public void remover(int id) {
+        // Aproveita o buscarPorId para lançar exceção se não existir antes de mandar deletar
         buscarPorId(id);
         repository.remover(id);
     }

@@ -19,4 +19,6 @@ public interface CategoriaRepository {
     Categoria buscarPorId(int id);
 
     List<Categoria> listarTodos();
+
+    boolean isCategoriaEmUso(int id); // Método para verificar o uso da categoria em patrimônios
 }

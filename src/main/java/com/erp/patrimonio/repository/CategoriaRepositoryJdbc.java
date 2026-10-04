@@ -318,4 +318,39 @@ public class CategoriaRepositoryJdbc implements CategoriaRepository {
             fecharConexaoSeNecessario(conn);
         }
     }
+
+   // Consulta para verificar se a categoria está em uso em algum patrimônio
+    @Override
+    public boolean isCategoriaEmUso(int id) {
+        String sql = "SELECT COUNT(*) FROM patrimonios WHERE categoria_id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = obterConexao(); // Usa o gerenciador de transações
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Se for maior que 0 está em uso
+            }
+        } catch (Exception e) {
+            throw new EstadoInvalidoException("Erro ao verificar uso da categoria no banco MySQL: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (Exception e) {
+            }
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (Exception e) {
+            }
+            fecharConexaoSeNecessario(conn); // Fecha da forma segura
+        }
+        return false;
+    }
 }
